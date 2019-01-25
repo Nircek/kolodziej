@@ -82,7 +82,7 @@ class Data:
 
     def __repr__(self):
         s = ''
-        s += 'DATA(' + str(self.n) + ')['
+        s += 'DATA(len:' + str(self.n) + ')['
         for i in range(len(self.n)):
             s += '(' + str(X[i]) + ',' + str(Y[i]) + '), '
         if self.n == 0:
@@ -90,41 +90,46 @@ class Data:
         s += ']'
         return s
 
-# -----------------------
+class Circle:
+    def __init__(self):
+        self.a=0.
+        self.b=0.
+        self.r=1.
+        self.s=0.
+        self.i=0
+        self.j=0
 
-struct Circle {
-// see the unedited code: http://people.cas.uab.edu/~mosya/cl/circle.h
-    reals a, b, r, s, g, Gx, Gy;
-    int i, j;
-    Circle() {
-        a=0.; b=0.; r=1.; s=0.; i=0; j=0;
-    }
-    Circle(reals aa, reals bb, reals rr) {
-        a=aa; b=bb; r=rr;
-    }
-    void print() {
-        cout << endl << setprecision(10) <<
-                "center (" <<a <<","<< b <<")  radius " << r <<
-                "  sigma " << s << "  gradient " << g <<
-                "  iter "<< i << "  inner " << j << endl;
-    }
-};
+    def __init__(self, aa, bb, rr) {
+        self.a=aa
+        self.b=bb
+        self.r=rr
+        self.s=0.
+        self.i=0
+        self.j=0
 
-template<typename T>
-inline T SQR(T t) { return t*t; };
+    def __repr__(self):
+        s = 'CIRCLE('
+        s += 'x:' + str(self.a)
+        s += ', y:' + str(self.b)
+        s += ', r:' + str(self.r)
+        s += ', s:' + str(self.s)
+        s += ', g:' + str(self.g)
+        s += ', i:' + str(self.i)
+        s += ', j:' + str(self.j)
+        s += ')'
 
-reals Sigma (Data& data, Circle& circle)
-{
-    reals sum=0.,dx,dy;
+def SQR(t):
+    return t*t
 
-    for (int i=0; i<data.n; i++)
-    {
-        dx = data.X[i] - circle.a;
-        dy = data.Y[i] - circle.b;
-        sum += SQR(sqrt(dx*dx+dy*dy) - circle.r);
-    }
-    return sqrt(sum/data.n);
-}
+def Sigma(data, circle):
+    sum = 0.
+    for i in range(self.n):
+        dx = data.X[i] - circle.a
+        dy = data.Y[i] - circle.b
+        sum += SQR(sqrt(dx*dx+dy*dy) - circle.r)
+    return sqrt(sum/data.n)
+
+# -----------------
 
 int CircleFitByLevenbergMarquardtFull (Data& data, Circle& circleIni, reals LambdaIni, Circle& circle) {
 /*
