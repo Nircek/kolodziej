@@ -1,129 +1,96 @@
-// inspirated by http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
-// copyright (c) 2011-2014 Nikolai Chernov
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
 
-// edited by Nircek 2019
-// I think it was in public domain, so I'm publishing this edited code in MIT license.
+# inspirated by http://people.cas.uab.edu/~mosya/cl/CPPcircle.html
+# copyright (c) 2011-2014 Nikolai Chernov
+# edited by Nircek 2019
 
-/*
-MIT License
+# MIT License
 
-Copyright (c) 2019 Nircek
+# Copyright (c) 2019 Nircek
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-#include <iostream>
-#include <cmath>
-#include <iomanip>
-#include <fstream>
-using namespace std;
-typedef double reals;
-typedef long long integers;
-const reals One=1.0,Two=2.0,Three=3.0,Four=4.0,Five=5.0,Six=6.0,Ten=10.0;
-struct Data {
-// see the unedited code: http://people.cas.uab.edu/~mosya/cl/data.h
-    int n;
-    reals *X, *Y;
-    reals meanX, meanY;
+from math import sqrt
 
-    Data() {
-        n=0;
-        X = new reals[n];
-        Y = new reals[n];
-        for (int i=0; i<n; i++) {
-            X[i]=0.;
-            Y[i]=0.;
-        }
-    }
+class Data:
+    def __init__(self):
+        self.n = 0
+        self.X = []
+        self.Y = []
+        for i in range(len(self.n)):
+            self.X += [0.]
+            self.Y += [0.]
 
-    Data(int N) {
-        n=N;
-        X = new reals[n];
-        Y = new reals[n];
-        for (int i=0; i<n; i++) {
-            X[i]=0.;
-            Y[i]=0.;
-        }
-    }
+    def __init__(self, n):
+        self.n = n
+        self.X = []
+        self.Y = []
+        for i in range(len(self.n)):
+            self.X += [0.]
+            self.Y += [0.]
 
-    Data(int N, reals dataX[], reals dataY[]) {
-        n=N;
-        X = new reals[n];
-        Y = new reals[n];
-        for (int i=0; i<n; i++) {
-            X[i]=dataX[i];
-            Y[i]=dataY[i];
-        }
-    }
+    def __init__(self, n, xs, ys):
+        if len(xs) != n or len(ys) != n:
+            raise Error('not as much xs or ys as declared')
+        self.n = n
+        self.X = xs
+        self.Y = ys
 
-    void means() {
-        meanX=0.; meanY=0.;
-        for (int i=0; i<n; i++) {
-            meanX += X[i];
-            meanY += Y[i];
-        }
-        meanX /= n;
-        meanY /= n;
-    }
+    @property
+    def mX(self):
+        return sum(self.X) / len(self.X)
 
-    void center() {
-        reals sX=0.,sY=0.;
-        int i;
-        for (i=0; i<n; i++) {
-            sX += X[i];
-            sY += Y[i];
-        }
-        sX /= n;
-        sY /= n;
-        for (i=0; i<n; i++) {
-            X[i] -= sX;
-            Y[i] -= sY;
-        }
-        meanX = 0.;
-        meanY = 0.;
-    }
+    @property
+    def mY(self):
+        return sum(self.Y) / len(self.Y)
 
-    void scale() {
-        reals sXX=0.,sYY=0.,scaling;
-        int i;
-        for (i=0; i<n; i++) {
-            sXX += X[i]*X[i];
-            sYY += Y[i]*Y[i];
-        }
-        scaling = sqrt((sXX+sYY)/n/Two);
-        for (i=0; i<n; i++) {
-            X[i] /= scaling;
-            Y[i] /= scaling;
-        }
-    }
+    def center(self):
+        mX = self.mX
+        mY = self.mY
+        for e in self.X:
+            e -= mX
+        for e in self.Y:
+            e -= mY
 
-    void print() {
-        cout << endl << "The data set has " << n << " points with coordinates :"<< endl;
-        for (int i=0; i<n-1; i++) cout << setprecision(7) << "(" << X[i] << ","<< Y[i] << "), ";
-        cout << "(" << X[n-1] << ","<< Y[n-1] << ")\n";
-    }
+    def scale(self):
+        sXX = 0.
+        sYY = 0.
+        for i in range(self.n):
+            sXX += X[i]*X[i]
+            sYY += Y[i]*Y[i]
+        scaling = sqrt((sXX+sYY)/self.n/2)
+        for i in range(self.n):
+            X[i] /= scaling
+            Y[i] /= scaling
 
-    ~Data() {
-        delete[] X;
-        delete[] Y;
-    }
-};
+    def __repr__(self):
+        s = ''
+        s += 'DATA(' + str(self.n) + ')['
+        for i in range(len(self.n)):
+            s += '(' + str(X[i]) + ',' + str(Y[i]) + '), '
+        if self.n == 0:
+            s = s[:-2]
+        s += ']'
+        return s
+
+# -----------------------
 
 struct Circle {
 // see the unedited code: http://people.cas.uab.edu/~mosya/cl/circle.h
