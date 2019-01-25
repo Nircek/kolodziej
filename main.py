@@ -131,97 +131,103 @@ def Sigma(data, circle):
 
 # -----------------
 
-int CircleFitByLevenbergMarquardtFull (Data& data, Circle& circleIni, reals LambdaIni, Circle& circle) {
-/*
-       Algorithm:  Levenberg-Marquardt running over the full parameter space (a,b,r)
+def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
+    '''
+        Algorithm:  Levenberg-Marquardt running over the full parameter space (a,b,r)
 
-       See a detailed description in Section 4.5 of the book by Nikolai Chernov:
-       "Circular and linear regression: Fitting circles and lines by least squares"
-       Chapman & Hall/CRC, Monographs on Statistics and Applied Probability, volume 117, 2010.
+        See a detailed description in Section 4.5 of the book by Nikolai Chernov:
+        "Circular and linear regression: Fitting circles and lines by least squares"
+        Chapman & Hall/CRC, Monographs on Statistics and Applied Probability, volume 117, 2010.
 
         Nikolai Chernov,  February 2014
-*/
-// see the unedited code: http://people.cas.uab.edu/~mosya/cl/CircleFitByLevenbergMarquardtFull.cpp
-    int code,i,iter,inner,IterMAX=99;
-
-    reals factorUp=10.,factorDown=0.04,lambda,ParLimit=1.e+6;
-    reals dx,dy,ri,u,v;
-    reals Mu,Mv,Muu,Mvv,Muv,Mr,UUl,VVl,Nl,F1,F2,F3,dX,dY,dR;
-    reals epsilon=3.e-8;
-    reals G11,G22,G33,G12,G13,G23,D1,D2,D3;
-    Circle Old,New;
-    New = circleIni;
-    New.s = Sigma(data,New);
-    lambda = LambdaIni;
-    iter = inner = code = 0;
+        see the unedited code: http://people.cas.uab.edu/~mosya/cl/CircleFitByLevenbergMarquardtFull.cpp
+        port from C++ to Python by Nircek in January 2019
+    '''
+    IterMAX = 99
+    factorUp=10.
+    factorDown=0.04
+    ParLimit=1.e+6
+    epsilon=3.e-8
+    New = circleIni
+    New.s = Sigma(data,New)
+    lambd = LambdaIni
+    iterr = inner = code = 0
 NextIteration:
-    Old = New;
-    if (++iter > IterMAX) {code = 1;  goto enough;}
-    Mu=Mv=Muu=Mvv=Muv=Mr=0.;
-    for (i=0; i<data.n; i++) {
-        dx = data.X[i] - Old.a;
-        dy = data.Y[i] - Old.b;
-        ri = sqrt(dx*dx + dy*dy);
-        u = dx/ri;
-        v = dy/ri;
-        Mu += u;
-        Mv += v;
-        Muu += u*u;
-        Mvv += v*v;
-        Muv += u*v;
-        Mr += ri;
-    }
-    Mu /= data.n;
-    Mv /= data.n;
-    Muu /= data.n;
-    Mvv /= data.n;
-    Muv /= data.n;
-    Mr /= data.n;
-    F1 = Old.a + Old.r*Mu - data.meanX;
-    F2 = Old.b + Old.r*Mv - data.meanY;
-    F3 = Old.r - Mr;
-    Old.g = New.g = sqrt(F1*F1 + F2*F2 + F3*F3);
+    Old = New
+    iterr += 1
+    if iterr > IterMAX:
+        code = 1
+        goto enough
+    Mu=Mv=Muu=Mvv=Muv=Mr=0.
+    for i in range(data.n):
+        dx = data.X[i] - Old.a
+        dy = data.Y[i] - Old.b
+        ri = sqrt(dx*dx + dy*dy)
+        u = dx/ri
+        v = dy/ri
+        Mu += u
+        Mv += v
+        Muu += u*u
+        Mvv += v*v
+        Muv += u*v
+        Mr += ri
+    Mu /= data.n
+    Mv /= data.n
+    Muu /= data.n
+    Mvv /= data.n
+    Muv /= data.n
+    Mr /= data.n
+    F1 = Old.a + Old.r*Mu - data.meanX
+    F2 = Old.b + Old.r*Mv - data.meanY
+    F3 = Old.r - Mr
+    Old.g = New.g = sqrt(F1*F1 + F2*F2 + F3*F3)
 try_again:
-    UUl = Muu + lambda;
-    VVl = Mvv + lambda;
-    Nl = One + lambda;
-    G11 = sqrt(UUl);
-    G12 = Muv/G11;
-    G13 = Mu/G11;
-    G22 = sqrt(VVl - G12*G12);
-    G23 = (Mv - G12*G13)/G22;
-    G33 = sqrt(Nl - G13*G13 - G23*G23);
-    D1 = F1/G11;
-    D2 = (F2 - G12*D1)/G22;
-    D3 = (F3 - G13*D1 - G23*D2)/G33;
-    dR = D3/G33;
-    dY = (D2 - G23*dR)/G22;
-    dX = (D1 - G12*dY - G13*dR)/G11;
-    if ((abs(dR)+abs(dX)+abs(dY))/(One+Old.r) < epsilon) goto enough;
-    New.a = Old.a - dX;
-    New.b = Old.b - dY;
-    if (abs(New.a)>ParLimit || abs(New.b)>ParLimit) {code = 3; goto enough;}
-    New.r = Old.r - dR;
-    if (New.r <= 0.) {
-        lambda *= factorUp;
-        if (++inner > IterMAX) {code = 2;  goto enough;}
-        goto try_again;
-    }
-    New.s = Sigma(data,New);
-    if (New.s < Old.s) {
-        lambda *= factorDown;
-        goto NextIteration;
-    } else {
-        if (++inner > IterMAX) {code = 2;  goto enough;}
-        lambda *= factorUp;
-        goto try_again;
-    }
+    UUl = Muu + lambd
+    VVl = Mvv + lambd
+    Nl = 1.0 + lambd
+    G11 = sqrt(UUl)
+    G12 = Muv/G11
+    G13 = Mu/G11
+    G22 = sqrt(VVl - G12*G12)
+    G23 = (Mv - G12*G13)/G22
+    G33 = sqrt(Nl - G13*G13 - G23*G23)
+    D1 = F1/G11
+    D2 = (F2 - G12*D1)/G22
+    D3 = (F3 - G13*D1 - G23*D2)/G33
+    dR = D3/G33
+    dY = (D2 - G23*dR)/G22
+    dX = (D1 - G12*dY - G13*dR)/G11
+    if (abs(dR)+abs(dX)+abs(dY))/(1.0+Old.r) < epsilon:
+        goto enough
+    New.a = Old.a - dX
+    New.b = Old.b - dY
+    if abs(New.a)>ParLimit or abs(New.b)>ParLimit:
+        code = 3
+        goto enough
+    New.r = Old.r - dR
+    if New.r <= 0.:
+        lambd *= factorUp
+        inner += 1
+        if inner > IterMAX:
+            code = 2
+            goto enough
+        goto try_again
+    New.s = Sigma(data,New)
+    if New.s < Old.s:
+        lambd *= factorDown
+        goto NextIteration
+    else:
+        inner += 1
+        if inner > IterMAX:
+            code = 2
+            goto enough
+        lambd *= factorUp
+        goto try_again
 enough:
-    Old.i = iter;
-    Old.j = inner;
-    circle = Old;
-    return code;
-}
+    Old.i = iterr
+    Old.j = inner
+    circle = Old
+    return code
 
 
 
