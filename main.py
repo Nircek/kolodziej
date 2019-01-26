@@ -28,6 +28,7 @@
 # SOFTWARE.
 
 from math import sqrt
+from sys import argv
 
 class Data:
     def __init__(self):
@@ -188,7 +189,7 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
             dR = D3/G33
             dY = (D2 - G23*dR)/G22
             dX = (D1 - G12*dY - G13*dR)/G11
-            if (abs(dR)+abs(dX)+abs(dY))/(1.0+Old.r) < epsilon:
+            if (abs(dR)+abs(dX)+abs(dY))/(1.+Old.r) < epsilon:
                 code = 0
                 break
             New.a = Old.a - dX
@@ -214,26 +215,40 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
                 else:
                     lambd *= factorUp
                 break
-        if code != 0:
+        if code != -1:
             break
     Old.i = iterr
     Old.j = inner
-    circle = Old
-    return code
+    return code, Old
 
 if __name__ == '__main__':
-    Xs = [0,1,-1,0]
-    Ys = [1,0,0,-1]
-    LambdaIni = 0.001
-    data1 = Data(len(Xs), Xs, Ys)
-    circle, circleIni = Circle(), Circle()
-    code = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
-    if code == 1 or code == 2:
-        print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Iterations maxed out.\n")
-    elif code == 3:
-        print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Fitting circle too big.\n")
-    elif code == 0:
-        print('X Y Radius Sigma Iterations')
-        print(circle.a, circle.b, circle.r, circle.s, circle.i)
-    else:
-        print('Unexpected code:', code)
+    argv = argv[1:]
+    for i in range(len(argv)):
+        f = open(argv[i], 'r')
+        Xs = []
+        Ys = []
+        for ff in f:
+            ff = ff.replace(',', '.')
+            ff = ff.split()
+            if len(ff) < 2:
+                print('WARN: ignoring \'', ''.join(ff),  '\'', split='')
+                continue
+            if len(ff) > 2:
+                print('WARN: ignoring \'', ''.join(ff[2:]),  '\'', split='')
+            x = float(ff[0])
+            y = float(ff[1])
+            Xs += [x]
+            Ys += [y]
+        LambdaIni = 0.001
+        data1 = Data(len(Xs), Xs, Ys)
+        circle, circleIni = Circle(), Circle()
+        code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+        if code == 1 or code == 2:
+            print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Iterations maxed out.\n")
+        elif code == 3:
+            print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Fitting circle too big.\n")
+        elif code == 0:
+            print('I Name X Y Radius Sigma Iterations')
+            print(i, argv[i], circle.a, circle.b, circle.r, circle.s, circle.i)
+        else:
+            print('Unexpected code:', code)
