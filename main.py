@@ -91,15 +91,7 @@ class Data:
         return s
 
 class Circle:
-    def __init__(self):
-        self.a=0.
-        self.b=0.
-        self.r=1.
-        self.s=0.
-        self.i=0
-        self.j=0
-
-    def __init__(self, aa, bb, rr) {
+    def __init__(self, aa=0., bb=0., rr=1.):
         self.a=aa
         self.b=bb
         self.r=rr
@@ -123,7 +115,7 @@ def SQR(t):
 
 def Sigma(data, circle):
     sum = 0.
-    for i in range(self.n):
+    for i in range(data.n):
         dx = data.X[i] - circle.a
         dy = data.Y[i] - circle.b
         sum += SQR(sqrt(dx*dx+dy*dy) - circle.r)
@@ -151,79 +143,81 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     New = circleIni
     New.s = Sigma(data,New)
     lambd = LambdaIni
-    iterr = inner = code = 0
-NextIteration:
-    Old = New
-    iterr += 1
-    if iterr > IterMAX:
-        code = 1
-        goto enough
-    Mu=Mv=Muu=Mvv=Muv=Mr=0.
-    for i in range(data.n):
-        dx = data.X[i] - Old.a
-        dy = data.Y[i] - Old.b
-        ri = sqrt(dx*dx + dy*dy)
-        u = dx/ri
-        v = dy/ri
-        Mu += u
-        Mv += v
-        Muu += u*u
-        Mvv += v*v
-        Muv += u*v
-        Mr += ri
-    Mu /= data.n
-    Mv /= data.n
-    Muu /= data.n
-    Mvv /= data.n
-    Muv /= data.n
-    Mr /= data.n
-    F1 = Old.a + Old.r*Mu - data.meanX
-    F2 = Old.b + Old.r*Mv - data.meanY
-    F3 = Old.r - Mr
-    Old.g = New.g = sqrt(F1*F1 + F2*F2 + F3*F3)
-try_again:
-    UUl = Muu + lambd
-    VVl = Mvv + lambd
-    Nl = 1.0 + lambd
-    G11 = sqrt(UUl)
-    G12 = Muv/G11
-    G13 = Mu/G11
-    G22 = sqrt(VVl - G12*G12)
-    G23 = (Mv - G12*G13)/G22
-    G33 = sqrt(Nl - G13*G13 - G23*G23)
-    D1 = F1/G11
-    D2 = (F2 - G12*D1)/G22
-    D3 = (F3 - G13*D1 - G23*D2)/G33
-    dR = D3/G33
-    dY = (D2 - G23*dR)/G22
-    dX = (D1 - G12*dY - G13*dR)/G11
-    if (abs(dR)+abs(dX)+abs(dY))/(1.0+Old.r) < epsilon:
-        goto enough
-    New.a = Old.a - dX
-    New.b = Old.b - dY
-    if abs(New.a)>ParLimit or abs(New.b)>ParLimit:
-        code = 3
-        goto enough
-    New.r = Old.r - dR
-    if New.r <= 0.:
-        lambd *= factorUp
-        inner += 1
-        if inner > IterMAX:
-            code = 2
-            goto enough
-        goto try_again
-    New.s = Sigma(data,New)
-    if New.s < Old.s:
-        lambd *= factorDown
-        goto NextIteration
-    else:
-        inner += 1
-        if inner > IterMAX:
-            code = 2
-            goto enough
-        lambd *= factorUp
-        goto try_again
-enough:
+    iterr = inner = 0
+    code = -1
+    while 1:
+        Old = New
+        iterr += 1
+        if iterr > IterMAX:
+            code = 1
+            break
+        Mu=Mv=Muu=Mvv=Muv=Mr=0.
+        for i in range(data.n):
+            dx = data.X[i] - Old.a
+            dy = data.Y[i] - Old.b
+            ri = sqrt(dx*dx + dy*dy)
+            u = dx/ri
+            v = dy/ri
+            Mu += u
+            Mv += v
+            Muu += u*u
+            Mvv += v*v
+            Muv += u*v
+            Mr += ri
+        Mu /= data.n
+        Mv /= data.n
+        Muu /= data.n
+        Mvv /= data.n
+        Muv /= data.n
+        Mr /= data.n
+        F1 = Old.a + Old.r*Mu - data.mX
+        F2 = Old.b + Old.r*Mv - data.mY
+        F3 = Old.r - Mr
+        Old.g = New.g = sqrt(F1*F1 + F2*F2 + F3*F3)
+        while 1:
+            UUl = Muu + lambd
+            VVl = Mvv + lambd
+            Nl = 1.0 + lambd
+            G11 = sqrt(UUl)
+            G12 = Muv/G11
+            G13 = Mu/G11
+            G22 = sqrt(VVl - G12*G12)
+            G23 = (Mv - G12*G13)/G22
+            G33 = sqrt(Nl - G13*G13 - G23*G23)
+            D1 = F1/G11
+            D2 = (F2 - G12*D1)/G22
+            D3 = (F3 - G13*D1 - G23*D2)/G33
+            dR = D3/G33
+            dY = (D2 - G23*dR)/G22
+            dX = (D1 - G12*dY - G13*dR)/G11
+            if (abs(dR)+abs(dX)+abs(dY))/(1.0+Old.r) < epsilon:
+                code = 0
+                break
+            New.a = Old.a - dX
+            New.b = Old.b - dY
+            if abs(New.a)>ParLimit or abs(New.b)>ParLimit:
+                code = 3
+                break
+            New.r = Old.r - dR
+            if New.r <= 0.:
+                lambd *= factorUp
+                inner += 1
+                if inner > IterMAX:
+                    code = 2
+                break
+            New.s = Sigma(data,New)
+            if New.s < Old.s:
+                lambd *= factorDown
+                break
+            else:
+                inner += 1
+                if inner > IterMAX:
+                    code = 2
+                else:
+                    lambd *= factorUp
+                break
+        if code != 0:
+            break
     Old.i = iterr
     Old.j = inner
     circle = Old
