@@ -121,8 +121,6 @@ def Sigma(data, circle):
         sum += SQR(sqrt(dx*dx+dy*dy) - circle.r)
     return sqrt(sum/data.n)
 
-# -----------------
-
 def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     '''
         Algorithm:  Levenberg-Marquardt running over the full parameter space (a,b,r)
@@ -223,28 +221,19 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     circle = Old
     return code
 
-
-
-int main(int argc, const char **argv) {
-    int code;
-    const size_t quantity = 4;
-    reals Xs[quantity] = {0,1,-1,0};
-    reals Ys[quantity] = {1,0,0,-1};
-    reals LambdaIni = 0.001;
-
-    Data data1(quantity, Xs, Ys);
-    Circle circle, circleIni;
-    cout.precision(7);
-
-    code = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle);
-    if ((code == 1)||(code==2))
-        cerr << "\n Geometric circle by Levenberg-Marquardt (full) did not converge. Iterations maxed out.\n";
-    else if (code == 3)
-        cerr << "\n Geometric circle by Levenberg-Marquardt (full) did not converge. Fitting circle too big.\n";
-    else if (code == 0) {
-        cout << "X Y Radius Sigma Iterations" << endl;
-        cout << circle.a << ' ' << circle.b << ' ' << circle.r << ' ' << circle.s << ' ' << circle.i << endl;
-        return 0;
-    }
-    return 1;
-}
+if __name__ == '__main__':
+    Xs = [0,1,-1,0]
+    Ys = [1,0,0,-1]
+    LambdaIni = 0.001
+    data1 = Data(len(Xs), Xs, Ys)
+    circle, circleIni = Circle(), Circle()
+    code = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+    if code == 1 or code == 2:
+        print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Iterations maxed out.\n")
+    elif code == 3:
+        print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Fitting circle too big.\n")
+    elif code == 0:
+        print('X Y Radius Sigma Iterations')
+        print(circle.a, circle.b, circle.r, circle.s, circle.i)
+    else:
+        print('Unexpected code:', code)
