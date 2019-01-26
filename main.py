@@ -221,9 +221,19 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
+
 if __name__ == '__main__':
-    argv = argv[1:]
-    for i in range(len(argv)):
+    b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+    t = [
+            len(str(len(argv)-1)),
+            max([len(x) for x in argv[1:]]),
+            len(str(1/3)),
+            len(str(1/3)),
+            len(str(1/3)),
+            len(str(1/3))
+        ]
+    print(b('I', t[0]), b('Name', t[1]), b('X', t[2]), b('Y', t[3]), b('Radius', t[4]), b('Sigma', t[5]), 'Iterations')
+    for i in range(1,len(argv)):
         f = open(argv[i], 'r')
         Xs = []
         Ys = []
@@ -231,10 +241,10 @@ if __name__ == '__main__':
             ff = ff.replace(',', '.')
             ff = ff.split()
             if len(ff) < 2:
-                print('WARN: ignoring \'', ''.join(ff),  '\'', split='')
+                print('WARN: ignoring \'', ''.join(ff),  '\'', sep='')
                 continue
             if len(ff) > 2:
-                print('WARN: ignoring \'', ''.join(ff[2:]),  '\'', split='')
+                print('WARN: ignoring \'', ''.join(ff[2:]),  '\'', sep='')
             x = float(ff[0])
             y = float(ff[1])
             Xs += [x]
@@ -243,12 +253,12 @@ if __name__ == '__main__':
         data1 = Data(len(Xs), Xs, Ys)
         circle, circleIni = Circle(), Circle()
         code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+        print(b(i, t[0]), b(argv[i], t[1]), end=' ')
         if code == 1 or code == 2:
-            print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Iterations maxed out.\n")
+            print('ERR: Iterations maxed out.')
         elif code == 3:
-            print("\n Geometric circle by Levenberg-Marquardt (full) did not converge. Fitting circle too big.\n")
+            print('ERR: Fitting circle too big.')
         elif code == 0:
-            print('I Name X Y Radius Sigma Iterations')
-            print(i, argv[i], circle.a, circle.b, circle.r, circle.s, circle.i)
+            print(b(circle.a, t[2]), b(circle.b, t[3]), b(circle.r, t[4]), b(circle.s, t[5]), circle.i)
         else:
             print('Unexpected code:', code)
