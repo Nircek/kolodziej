@@ -222,30 +222,32 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
-
 if __name__ == '__main__':
+    log = ''
+    files = argv[1:]
     b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
     t = [
-            len(str(len(argv)-1)),
-            max([len(x) for x in argv[1:]]),
-            len(str(1/3)),
-            len(str(1/3)),
-            len(str(1/3)),
-            len(str(1/3))
+            len(str(len(files)))+1,
+            max([len(x) for x in files])+1,
+            len(str(-1/3))+1,
+            len(str(-1/3))+1,
+            len(str(-1/3))+1,
+            len(str(-1/3))+1,
+            len('Iterations')
         ]
-    print(b('I', t[0]), b('Name', t[1]), b('X', t[2]), b('Y', t[3]), b('Radius', t[4]), b('Sigma', t[5]), 'Iterations')
-    for i in range(1,len(argv)):
-        f = open(argv[i], 'r')
+    log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
+    for i in range(len(files)):
+        f = open(files[i], 'r')
         Xs = []
         Ys = []
         for ff in f:
             ff = ff.replace(',', '.')
             ff = ff.split()
             if len(ff) < 2:
-                print('WARN: ignoring \'', ''.join(ff),  '\'', sep='')
+                log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
                 continue
             if len(ff) > 2:
-                print('WARN: ignoring \'', ''.join(ff[2:]),  '\'', sep='')
+                log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
             x = float(ff[0])
             y = float(ff[1])
             Xs += [x]
@@ -254,15 +256,15 @@ if __name__ == '__main__':
         data1 = Data(len(Xs), Xs, Ys)
         circle, circleIni = Circle(), Circle()
         code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
-        print(b(i, t[0]), b(argv[i], t[1]), end=' ')
+        log += b(i+1, t[0]) + b(files[i], t[1])
         if code == 1 or code == 2:
-            print('ERR: Iterations maxed out.')
+            log += 'ERR: Iterations maxed out.\n'
         elif code == 3:
-            print('ERR: Fitting circle too big.')
+            log += 'ERR: Fitting circle too big.\n'
         elif code == 0:
-            print(b(circle.a, t[2]), b(circle.b, t[3]), b(circle.r, t[4]), b(circle.s, t[5]), circle.i)
+            log += b(circle.a, t[2]) + b(circle.b, t[3]) + b(circle.r, t[4]) + b(circle.s, t[5]) + str(circle.i) + '\n'
             tk = Tk()
-            tk.title(argv[i])
+            tk.title(files[i])
             w = Canvas(tk, width=1000, height=1000)
             w.configure(background='white')
             w.pack()
@@ -276,5 +278,13 @@ if __name__ == '__main__':
                 y = data1.Y[i] / 10 + 500
                 w.create_oval(x, y, x, y, width = 5)
         else:
-            print('Unexpected code:', code)
+            log += 'Unexpected code:' + str(code) + '\n'
+    tk = Tk()
+    tk.title('LOG')
+    w = Text(tk, width=sum(t), foreground='black')
+    w.insert(INSERT, log)
+    w.pack()
+    w.configure(state="disabled")
+    w.configure(background='white')
+    w.configure(inactiveselectbackground=w.cget("selectbackground"))
     mainloop()
