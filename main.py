@@ -29,6 +29,7 @@
 
 from math import sqrt
 from sys import argv
+from tkinter import filedialog
 from tkinter import *
 
 class Data:
@@ -225,17 +226,25 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
 if __name__ == '__main__':
     log = ''
     files = argv[1:]
-    b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
-    t = [
-            len(str(len(files)))+1,
-            max([len(x) for x in files])+1,
-            len(str(-1/3))+1,
-            len(str(-1/3))+1,
-            len(str(-1/3))+1,
-            len(str(-1/3))+1,
-            len('Iterations')
-        ]
-    log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
+    if len(files) == 0:
+        tk = Tk()
+        tk.withdraw()
+        files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
+        tk.destroy()
+    if len(files) != 0:
+        b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+        t = [
+                len(str(len(files)))+1,
+                max([len(x) for x in files])+1,
+                len(str(-1/3))+1,
+                len(str(-1/3))+1,
+                len(str(-1/3))+1,
+                len(str(-1/3))+1,
+                len('Iterations')
+            ]
+        log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
+    else:
+        t=[100]
     for i in range(len(files)):
         f = open(files[i], 'r')
         Xs = []
