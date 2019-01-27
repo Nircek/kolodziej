@@ -29,8 +29,9 @@
 
 from math import sqrt
 from sys import argv
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from tkinter import *
+import traceback
 
 class Data:
     def __init__(self):
@@ -224,76 +225,79 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     return code, Old
 
 if __name__ == '__main__':
-    log = ''
-    files = argv[1:]
-    if len(files) == 0:
-        tk = Tk()
-        tk.withdraw()
-        files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
-        tk.destroy()
-    if len(files) != 0:
-        b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
-        t = [
-                len(str(len(files)))+1,
-                max([len(x) for x in files])+1,
-                len(str(-1/3))+1,
-                len(str(-1/3))+1,
-                len(str(-1/3))+1,
-                len(str(-1/3))+1,
-                len('Iterations')
-            ]
-        log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
-    else:
-        t=[100]
-    for i in range(len(files)):
-        f = open(files[i], 'r')
-        Xs = []
-        Ys = []
-        for ff in f:
-            ff = ff.replace(',', '.')
-            ff = ff.split()
-            if len(ff) < 2:
-                log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
-                continue
-            if len(ff) > 2:
-                log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
-            x = float(ff[0])
-            y = float(ff[1])
-            Xs += [x]
-            Ys += [y]
-        LambdaIni = 0.001
-        data1 = Data(len(Xs), Xs, Ys)
-        circle, circleIni = Circle(), Circle()
-        code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
-        log += b(i+1, t[0]) + b(files[i], t[1])
-        if code == 1 or code == 2:
-            log += 'ERR: Iterations maxed out.\n'
-        elif code == 3:
-            log += 'ERR: Fitting circle too big.\n'
-        elif code == 0:
-            log += b(circle.a, t[2]) + b(circle.b, t[3]) + b(circle.r, t[4]) + b(circle.s, t[5]) + str(circle.i) + '\n'
+    try:
+        log = ''
+        files = argv[1:]
+        if len(files) == 0:
             tk = Tk()
-            tk.title(files[i])
-            w = Canvas(tk, width=1000, height=1000)
-            w.configure(background='white')
-            w.pack()
-            circ = lambda x, y, r: w.create_oval(x-r, y-r, x+r, y+r, outline='red')
-            w.create_oval(circle.a/10+500, circle.b/10+500, circle.a/10+500, circle.b/10+500, width = 5, outline='red')
-            circ(circle.a/10+500, circle.b/10+500, circle.r/10)
-            w.create_line(0, 500, 1000, 500, arrow=LAST)
-            w.create_line(500, 1000, 500, 0, arrow=LAST)
-            for i in range(data1.n):
-                x = data1.X[i] / 10 + 500
-                y = data1.Y[i] / 10 + 500
-                w.create_oval(x, y, x, y, width = 5)
+            tk.withdraw()
+            files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
+            tk.destroy()
+        if len(files) != 0:
+            b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+            t = [
+                    len(str(len(files)))+1,
+                    max([len(x) for x in files])+1,
+                    len(str(-1/3))+1,
+                    len(str(-1/3))+1,
+                    len(str(-1/3))+1,
+                    len(str(-1/3))+1,
+                    len('Iterations')
+                ]
+            log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
         else:
-            log += 'Unexpected code:' + str(code) + '\n'
-    tk = Tk()
-    tk.title('LOG')
-    w = Text(tk, width=sum(t), foreground='black')
-    w.insert(INSERT, log)
-    w.pack()
-    w.configure(state="disabled")
-    w.configure(background='white')
-    w.configure(inactiveselectbackground=w.cget("selectbackground"))
-    mainloop()
+            t=[100]
+        for i in range(len(files)):
+            f = open(files[i], 'r')
+            Xs = []
+            Ys = []
+            for ff in f:
+                ff = ff.replace(',', '.')
+                ff = ff.split()
+                if len(ff) < 2:
+                    log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
+                    continue
+                if len(ff) > 2:
+                    log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
+                x = float(ff[0])
+                y = float(ff[1])
+                Xs += [x]
+                Ys += [y]
+            LambdaIni = 0.001
+            data1 = Data(len(Xs), Xs, Ys)
+            circle, circleIni = Circle(), Circle()
+            code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+            log += b(i+1, t[0]) + b(files[i], t[1])
+            if code == 1 or code == 2:
+                log += 'ERR: Iterations maxed out.\n'
+            elif code == 3:
+                log += 'ERR: Fitting circle too big.\n'
+            elif code == 0:
+                log += b(circle.a, t[2]) + b(circle.b, t[3]) + b(circle.r, t[4]) + b(circle.s, t[5]) + str(circle.i) + '\n'
+                tk = Tk()
+                tk.title(files[i])
+                w = Canvas(tk, width=1000, height=1000)
+                w.configure(background='white')
+                w.pack()
+                circ = lambda x, y, r: w.create_oval(x-r, y-r, x+r, y+r, outline='red')
+                w.create_oval(circle.a/10+500, circle.b/10+500, circle.a/10+500, circle.b/10+500, width = 5, outline='red')
+                circ(circle.a/10+500, circle.b/10+500, circle.r/10)
+                w.create_line(0, 500, 1000, 500, arrow=LAST)
+                w.create_line(500, 1000, 500, 0, arrow=LAST)
+                for i in range(data1.n):
+                    x = data1.X[i] / 10 + 500
+                    y = data1.Y[i] / 10 + 500
+                    w.create_oval(x, y, x, y, width = 5)
+            else:
+                log += 'Unexpected code:' + str(code) + '\n'
+        tk = Tk()
+        tk.title('LOG')
+        w = Text(tk, width=sum(t), foreground='black')
+        w.insert(INSERT, log)
+        w.pack()
+        w.configure(state="disabled")
+        w.configure(background='white')
+        w.configure(inactiveselectbackground=w.cget("selectbackground"))
+        mainloop()
+    except Exception as e:
+        messagebox.showerror("Fatal error", traceback.format_exc())
