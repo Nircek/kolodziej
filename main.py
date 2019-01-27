@@ -234,6 +234,7 @@ if __name__ == '__main__':
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             tk.destroy()
         if len(files) != 0:
+            s = lambda i: str(i).replace('.', ',')
             b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
             t = [
                     len(str(len(files)))+1,
@@ -273,7 +274,7 @@ if __name__ == '__main__':
             elif code == 3:
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
-                log += b(circle.a, t[2]) + b(circle.b, t[3]) + b(circle.r, t[4]) + b(circle.s, t[5]) + str(circle.i) + '\n'
+                log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
                 tk = Tk()
                 tk.title(files[i])
                 w = Canvas(tk, width=1000, height=1000)
