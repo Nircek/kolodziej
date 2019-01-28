@@ -281,13 +281,13 @@ if __name__ == '__main__':
                 w.configure(background='white')
                 w.pack()
                 circ = lambda x, y, r: w.create_oval(x-r, y-r, x+r, y+r, outline='red')
-                w.create_oval(circle.a/10+500, circle.b/10+500, circle.a/10+500, circle.b/10+500, width = 5, outline='red')
-                circ(circle.a/10+500, circle.b/10+500, circle.r/10)
+                w.create_oval(circle.a/10+500, -circle.b/10+500, circle.a/10+500, -circle.b/10+500, width = 5, outline='red')
+                circ(circle.a/10+500, -circle.b/10+500, circle.r/10)
                 w.create_line(0, 500, 1000, 500, arrow=LAST)
                 w.create_line(500, 1000, 500, 0, arrow=LAST)
                 for i in range(data1.n):
                     x = data1.X[i] / 10 + 500
-                    y = data1.Y[i] / 10 + 500
+                    y = -data1.Y[i] / 10 + 500
                     w.create_oval(x, y, x, y, width = 5)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
