@@ -224,6 +224,14 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
+from PIL import ImageTk, Image, ImageDraw
+import tkinter as tk
+def show(img):
+    root = tk.Tk()
+    tkimage = ImageTk.PhotoImage(img)
+    tk.Label(root, image=tkimage).pack()
+    root.mainloop()
+
 if __name__ == '__main__':
     try:
         log = ''
