@@ -32,6 +32,7 @@ from sys import argv
 from tkinter import filedialog, messagebox
 from tkinter import *
 import traceback
+from PIL import ImageTk, Image, ImageDraw, ImageFont
 
 class Data:
     def __init__(self):
@@ -224,7 +225,6 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
-from PIL import ImageTk, Image, ImageDraw
 def show(img):
     root = Tk()
     tkimage = ImageTk.PhotoImage(img)
@@ -282,7 +282,7 @@ if __name__ == '__main__':
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                W = 595 # in px
+                W = 595-16 # in px
                 Wc = 10000 # in chart units
                 x = lambda x: x*W/Wc+W/2
                 y = lambda x: x*W/Wc
@@ -297,7 +297,14 @@ if __name__ == '__main__':
                 imgd.polygon((W/2, 0, W/2-9, 9, W/2+9, 9), outline='black')
                 for i in range(data1.n):
                     circ(x(data1.X[i]), x(data1.Y[i]), 2, {'fill':'black'})
-                show(img)
+                pap = Image.new('RGBA', (595, 842), 'white')
+                pap.paste(img, ((pap.size[0]-W)//4, (pap.size[1]-W)//4))
+                papd = ImageDraw.Draw(pap)
+                fontsize = 20
+                fnt = ImageFont.truetype('Roboto-Regular.ttf', fontsize)
+                papd.text((16, 16), 'Test', (0,0,0), font=fnt)
+                papd.text((pap.size[0]//2, 16), 'Test', (0,0,0), font=fnt)
+                show(pap)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
