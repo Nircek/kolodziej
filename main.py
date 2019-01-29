@@ -225,11 +225,10 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     return code, Old
 
 from PIL import ImageTk, Image, ImageDraw
-import tkinter as tk
 def show(img):
-    root = tk.Tk()
+    root = Tk()
     tkimage = ImageTk.PhotoImage(img)
-    tk.Label(root, image=tkimage).pack()
+    Label(root, image=tkimage).pack()
     root.mainloop()
 
 if __name__ == '__main__':
@@ -283,20 +282,22 @@ if __name__ == '__main__':
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                tk = Tk()
-                tk.title(files[i])
-                w = Canvas(tk, width=1000, height=1000)
-                w.configure(background='white')
-                w.pack()
-                circ = lambda x, y, r: w.create_oval(x-r, y-r, x+r, y+r, outline='red')
-                w.create_oval(circle.a/10+500, -circle.b/10+500, circle.a/10+500, -circle.b/10+500, width = 5, outline='red')
-                circ(circle.a/10+500, -circle.b/10+500, circle.r/10)
-                w.create_line(0, 500, 1000, 500, arrow=LAST)
-                w.create_line(500, 1000, 500, 0, arrow=LAST)
+                W = 595 # in px
+                Wc = 10000 # in chart units
+                x = lambda x: x*W/Wc+W/2
+                y = lambda x: x*W/Wc
+                img = Image.new('RGBA', (W, W), 'white')
+                imgd = ImageDraw.Draw(img)
+                circ = lambda x, y, r, a={'outline': 'red'}: imgd.ellipse((x-r, y-r, x+r, y+r), **a)
+                circ(x(circle.a), x(-circle.b), 3, {'fill': 'red'})
+                circ(x(circle.a), x(-circle.b), y(circle.r))
+                imgd.line((0, W/2, W, W/2), fill='black')
+                imgd.polygon((W, W/2, W-9, W/2-9, W-9, W/2+9), outline='black')
+                imgd.line((W/2, 0, W/2, W), fill='black')
+                imgd.polygon((W/2, 0, W/2-9, 9, W/2+9, 9), outline='black')
                 for i in range(data1.n):
-                    x = data1.X[i] / 10 + 500
-                    y = -data1.Y[i] / 10 + 500
-                    w.create_oval(x, y, x, y, width = 5)
+                    circ(x(data1.X[i]), x(data1.Y[i]), 2, {'fill':'black'})
+                show(img)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
