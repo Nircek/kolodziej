@@ -296,7 +296,7 @@ if __name__ == '__main__':
                 imgd.line((W/2, 0, W/2, W), fill='black')
                 imgd.polygon((W/2, 0, W/2-9, 9, W/2+9, 9), outline='black')
                 for i in range(data1.n):
-                    circ(x(data1.X[i]), x(data1.Y[i]), 2, {'fill':'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
                 pap = Image.new('RGBA', (595, 842), 'white')
                 pap.paste(img, ((pap.size[0]-W)//4, (pap.size[1]-W)//4))
                 papd = ImageDraw.Draw(pap)
