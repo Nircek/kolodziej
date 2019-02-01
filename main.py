@@ -227,6 +227,19 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
 
 def show(img):
     root = Tk()
+    root.title('Kołodziej')
+    n = lambda:0
+    menubar = Menu(root)
+    filemenu = Menu(menubar, tearoff=0)
+    filemenu.add_command(label="Open", command=n)
+    filemenu.add_command(label="Save as...", command=n)
+    filemenu.add_command(label="Exit", command=root.quit)
+    menubar.add_cascade(label="File", menu=filemenu)
+    helpmenu = Menu(menubar, tearoff=0)
+    helpmenu.add_command(label="Get source code", command=n)
+    helpmenu.add_command(label="About...", command=n)
+    menubar.add_cascade(label="Help", menu=helpmenu)
+    root.config(menu=menubar)
     tkimage = ImageTk.PhotoImage(img)
     Label(root, image=tkimage).pack()
     root.mainloop()
