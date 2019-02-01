@@ -302,8 +302,13 @@ if __name__ == '__main__':
                 papd = ImageDraw.Draw(pap)
                 fontsize = 20
                 fnt = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize)
-                papd.text((16, 16), 'Test', (0,0,0), font=fnt)
-                papd.text((pap.size[0]//2, 16), 'Test', (0,0,0), font=fnt)
+                nr = '4'
+                gl = '275,1'
+                papd.text((16, 16), 'Przekrój nr: ' + nr, (0,0,0), font=fnt)
+                papd.text((pap.size[0]//2, 16), 'Głebokość: '+ gl + ' m', (0,0,0), font=fnt)
+                papd.text((pap.size[0]//2, (pap.size[1]-W)//4+W),
+                          'Współrzędne środka:\nXśr = ' + str(round(circle.a)) + ' mm Yśr = ' + str(round(circle.b)) + ' mm\nŚrednica przekroju:\nD = ' + str(round(circle.r*2)) + ' mm',
+                          (0,0,0), font=fnt)
                 show(pap)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
