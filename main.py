@@ -298,17 +298,22 @@ if __name__ == '__main__':
                 for i in range(data1.n):
                     circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
                 pap = Image.new('RGBA', (595, 842), 'white')
-                pap.paste(img, ((pap.size[0]-W)//4, (pap.size[1]-W)//4))
+                pap.paste(img, ((pap.size[0]-W)//2, (pap.size[1]-W)//2))
                 papd = ImageDraw.Draw(pap)
                 fontsize = 20
                 fnt = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize)
+                fnt2 = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize//2)
                 nr = '4'
                 gl = '275,1'
-                papd.text((16, 16), 'Przekrój nr: ' + nr, (0,0,0), font=fnt)
-                papd.text((pap.size[0]//2, 16), 'Głebokość: '+ gl + ' m', (0,0,0), font=fnt)
-                papd.text((pap.size[0]//2, (pap.size[1]-W)//4+W),
+                papd.text((16, 48), 'Przekrój nr: ' + nr, 'black', font=fnt)
+                papd.text((pap.size[0]//2, 48), 'Głebokość: '+ gl + ' m', 'black', font=fnt)
+                under = (pap.size[1]-W)//2+W
+                papd.text((pap.size[0]//2, under),
                           'Współrzędne środka:\nXśr = ' + str(round(circle.a)) + ' mm Yśr = ' + str(round(circle.b)) + ' mm\nŚrednica przekroju:\nD = ' + str(round(circle.r*2)) + ' mm',
-                          (0,0,0), font=fnt)
+                          'black', font=fnt)
+                scale = y(1000)
+                papd.text((24, under-fontsize//2), '1000 mm', 'black', font=fnt2)
+                papd.line([16, under, 16, under+16, 16+scale, under+16, 16+scale, under], fill='black')
                 show(pap)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
