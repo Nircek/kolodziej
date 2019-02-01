@@ -33,6 +33,7 @@ from tkinter import filedialog, messagebox
 from tkinter import *
 import traceback
 from PIL import ImageTk, Image, ImageDraw, ImageFont
+from webbrowser import open_new
 
 class Data:
     def __init__(self):
@@ -233,11 +234,11 @@ def show(img):
     filemenu = Menu(menubar, tearoff=0)
     filemenu.add_command(label="Open", command=n)
     filemenu.add_command(label="Save as...", command=n)
-    filemenu.add_command(label="Exit", command=root.quit)
+    filemenu.add_command(label="Exit", command=root.destroy)
     menubar.add_cascade(label="File", menu=filemenu)
     helpmenu = Menu(menubar, tearoff=0)
-    helpmenu.add_command(label="Get source code", command=n)
-    helpmenu.add_command(label="About...", command=n)
+    helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
+    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
     menubar.add_cascade(label="Help", menu=helpmenu)
     root.config(menu=menubar)
     tkimage = ImageTk.PhotoImage(img)
@@ -319,13 +320,14 @@ if __name__ == '__main__':
                 nr = '4'
                 gl = '275,1'
                 papd.text((16, 48), 'Przekrój nr: ' + nr, 'black', font=fnt)
-                papd.text((pap.size[0]//2, 48), 'Głebokość: '+ gl + ' m', 'black', font=fnt)
+                papd.text((pap.size[0]//2, 48), 'Głębokość: '+ gl + ' m', 'black', font=fnt)
                 under = (pap.size[1]-W)//2+W
                 papd.text((pap.size[0]//2, under),
                           'Współrzędne środka:\nXśr = ' + str(round(circle.a)) + ' mm Yśr = ' + str(round(circle.b)) + ' mm\nŚrednica przekroju:\nD = ' + str(round(circle.r*2)) + ' mm',
                           'black', font=fnt)
                 scale = y(1000)
-                papd.text((24, under-fontsize//2), '1000 mm', 'black', font=fnt2)
+                papd.text((pap.size[0]//2-5,(pap.size[1]-W)//2-fontsize-2), 'N', 'black', font=fnt)
+                papd.text((24, under-fontsize//2), '1000 m', 'black', font=fnt2)
                 papd.line([16, under, 16, under+16, 16+scale, under+16, 16+scale, under], fill='black')
                 show(pap)
             else:
