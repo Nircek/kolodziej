@@ -301,7 +301,7 @@ if __name__ == '__main__':
                 pap.paste(img, ((pap.size[0]-W)//4, (pap.size[1]-W)//4))
                 papd = ImageDraw.Draw(pap)
                 fontsize = 20
-                fnt = ImageFont.truetype('Roboto-Regular.ttf', fontsize)
+                fnt = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize)
                 papd.text((16, 16), 'Test', (0,0,0), font=fnt)
                 papd.text((pap.size[0]//2, 16), 'Test', (0,0,0), font=fnt)
                 show(pap)
