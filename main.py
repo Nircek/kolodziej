@@ -34,6 +34,10 @@ from tkinter import *
 import traceback
 from PIL import ImageTk, Image, ImageDraw, ImageFont
 from webbrowser import open_new
+import docx
+from docx.shared import Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
+import io
 
 class Data:
     def __init__(self):
@@ -226,26 +230,6 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
-def show(img):
-    root = Tk()
-    root.title('Kołodziej')
-    n = lambda:0
-    menubar = Menu(root)
-    filemenu = Menu(menubar, tearoff=0)
-    saveas = lambda: (lambda x: img.save(x) if x else '')((lambda: filedialog.asksaveasfilename(filetypes=(('png files','*.png'),('all files','*.*'))))())
-    filemenu.add_command(label="Save as...", command=saveas)
-    filemenu.add_command(label="Exit", command=root.destroy)
-    menubar.add_cascade(label="File", menu=filemenu)
-    helpmenu = Menu(menubar, tearoff=0)
-    helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
-    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
-    menubar.add_cascade(label="Help", menu=helpmenu)
-    root.config(menu=menubar)
-    tkimage = ImageTk.PhotoImage(img)
-    Label(root, image=tkimage).pack()
-    root.bind('<Control-s>', lambda x:saveas())
-    root.mainloop()
-
 if __name__ == '__main__':
     try:
         log = ''
@@ -270,6 +254,7 @@ if __name__ == '__main__':
             log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
         else:
             t=[100]
+        doc = docx.Document()
         for i in range(len(files)):
             f = open(files[i], 'r')
             Xs = []
@@ -312,29 +297,39 @@ if __name__ == '__main__':
                 imgd.polygon((W/2, 0, W/2-9, 9, W/2+9, 9), outline='black')
                 for i in range(data1.n):
                     circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
-                pap = Image.new('RGBA', (595, 842), 'white')
-                pap.paste(img, ((pap.size[0]-W)//2, (pap.size[1]-W)//2))
-                papd = ImageDraw.Draw(pap)
-                fontsize = 20
-                fnt = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize)
-                fnt2 = ImageFont.truetype('fonts/Roboto-Regular.ttf', fontsize//2)
-                nr = '4'
-                gl = '275,1'
-                papd.text((16, 48), 'Przekrój nr: ' + nr, 'black', font=fnt)
-                papd.text((pap.size[0]//2, 48), 'Głębokość: '+ gl + ' m', 'black', font=fnt)
-                under = (pap.size[1]-W)//2+W
-                papd.text((pap.size[0]//2, under),
-                          'Współrzędne środka:\nXśr = ' + str(round(circle.a)) + ' mm Yśr = ' + str(round(circle.b)) + ' mm\nŚrednica przekroju:\nD = ' + str(round(circle.r*2)) + ' mm',
-                          'black', font=fnt)
                 scale = y(1000)
-                papd.text((pap.size[0]//2-5,(pap.size[1]-W)//2-fontsize-2), 'N', 'black', font=fnt)
-                papd.text((24, under-fontsize//2), '1000 m', 'black', font=fnt2)
-                papd.line([16, under, 16, under+16, 16+scale, under+16, 16+scale, under], fill='black')
-                show(pap)
+                imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
+                p = doc.add_paragraph('')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.RIGHT)
+                p.add_run('Przekrój: ').bold = True
+                p.add_run('\tGłębokość:  m')
+                with io.BytesIO() as out:
+                    img.save(out, format='PNG')
+                    doc.add_picture(out, width=docx.shared.Cm(15))
+                doc.add_paragraph('\t1000 mm').paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
+                p = doc.add_paragraph('\tWspółrzędne środka:\n\tX')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(7), WD_TAB_ALIGNMENT.LEFT)
+                p.add_run('ŚR').font.subscript = True
+                p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
+                p.add_run('ŚR').font.subscript = True
+                p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica przekroju:\n\tD = ' + str(round(circle.r*2)) + ' mm')
+                doc.add_page_break()
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
-        tk.title('LOG')
+        tk.title('Kołodziej')
+        menubar = Menu(tk)
+        filemenu = Menu(menubar, tearoff=0)
+        saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
+        filemenu.add_command(label="Save as...", command=saveas)
+        filemenu.add_command(label="Exit", command=tk.destroy)
+        menubar.add_cascade(label="File", menu=filemenu)
+        helpmenu = Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
+        helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
+        menubar.add_cascade(label="Help", menu=helpmenu)
+        tk.config(menu=menubar)
+        tk.bind('<Control-s>', lambda x:saveas())
         w = Text(tk, width=sum(t), foreground='black')
         w.insert(INSERT, log)
         w.pack()
