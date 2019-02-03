@@ -38,6 +38,7 @@ import docx
 from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 import io
+from docx.shared import Pt
 
 class Data:
     def __init__(self):
@@ -298,17 +299,28 @@ if __name__ == '__main__':
                 for i in range(data1.n):
                     circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
                 scale = y(1000)
+                for i in range(1, 10):
+                  l = 6
+                  if i == 5:
+                    l = 10
+                  imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black')
                 imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
                 p = doc.add_paragraph('')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.RIGHT)
                 p.add_run('Przekrój: ').bold = True
                 p.add_run('\tGłębokość:  m')
+                p = doc.add_paragraph('')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(7.81), WD_TAB_ALIGNMENT.CENTER)
+                p.add_run('\tN').bold = True
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
                     doc.add_picture(out, width=docx.shared.Cm(15))
-                doc.add_paragraph('\t1000 mm').paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
+                p = doc.add_paragraph()
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
+                r = p.add_run('\t1000 mm')
+                r.font.size = Pt(9)
                 p = doc.add_paragraph('\tWspółrzędne środka:\n\tX')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(7), WD_TAB_ALIGNMENT.LEFT)
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
                 p.add_run('ŚR').font.subscript = True
                 p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('ŚR').font.subscript = True
