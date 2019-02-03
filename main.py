@@ -232,8 +232,8 @@ def show(img):
     n = lambda:0
     menubar = Menu(root)
     filemenu = Menu(menubar, tearoff=0)
-    filemenu.add_command(label="Open", command=n)
-    filemenu.add_command(label="Save as...", command=n)
+    saveas = lambda: (lambda x: img.save(x) if x else '')((lambda: filedialog.asksaveasfilename(filetypes=(('png files','*.png'),('all files','*.*'))))())
+    filemenu.add_command(label="Save as...", command=saveas)
     filemenu.add_command(label="Exit", command=root.destroy)
     menubar.add_cascade(label="File", menu=filemenu)
     helpmenu = Menu(menubar, tearoff=0)
@@ -243,6 +243,7 @@ def show(img):
     root.config(menu=menubar)
     tkimage = ImageTk.PhotoImage(img)
     Label(root, image=tkimage).pack()
+    root.bind('<Control-s>', lambda x:saveas())
     root.mainloop()
 
 if __name__ == '__main__':
