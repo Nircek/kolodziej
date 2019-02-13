@@ -39,6 +39,7 @@ from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 import io
 from docx.shared import Pt, RGBColor
+import os
 
 class Data:
     def __init__(self):
@@ -231,6 +232,16 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
+# src: https://stackoverflow.com/a/39885430
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.environ.get("_MEIPASS2",os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
 if __name__ == '__main__':
     try:
         log = ''
@@ -307,7 +318,7 @@ if __name__ == '__main__':
                     w = 2
                   imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black', width=w)
                 imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
-                fnt = ImageFont.truetype('./fonts/Roboto-Regular.ttf', 12)
+                fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 12)
                 imgd.text((16-3, W-18-16), '0', font=fnt, fill='black')
                 imgd.text((16+scale-25, W-18-16), '1000 mm', font=fnt, fill='black')
                 p = doc.add_paragraph('')
