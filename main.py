@@ -38,7 +38,7 @@ import docx
 from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 import io
-from docx.shared import Pt
+from docx.shared import Pt, RGBColor
 
 class Data:
     def __init__(self):
@@ -293,38 +293,48 @@ if __name__ == '__main__':
                 circ(x(circle.a), x(-circle.b), 3, {'fill': 'red'})
                 circ(x(circle.a), x(-circle.b), y(circle.r))
                 imgd.line((0, W/2, W, W/2), fill='black')
-                imgd.polygon((W, W/2, W-9, W/2-9, W-9, W/2+9), outline='black')
+                imgd.line((W-15, W/2-5, W, W/2, W-15, W/2+5), fill='black')
                 imgd.line((W/2, 0, W/2, W), fill='black')
-                imgd.polygon((W/2, 0, W/2-9, 9, W/2+9, 9), outline='black')
+                imgd.line((W/2-5, 15, W/2, 0, W/2+5, 15), fill='black')
                 for i in range(data1.n):
                     circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
                 scale = y(1000)
                 for i in range(1, 10):
                   l = 6
+                  w = 0
                   if i == 5:
                     l = 10
-                  imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black')
+                    w = 2
+                  imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black', width=w)
                 imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
+                fnt = ImageFont.truetype('./fonts/Roboto-Regular.ttf', 12)
+                imgd.text((16-3, W-18-16), '0', font=fnt, fill='black')
+                imgd.text((16+scale-25, W-18-16), '1000 mm', font=fnt, fill='black')
                 p = doc.add_paragraph('')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(15), WD_TAB_ALIGNMENT.RIGHT)
-                p.add_run('Przekrój: ').bold = True
-                p.add_run('\tGłębokość:  m')
+                r = p.add_run('Przekrój: ')
+                r.bold = True
+                r.font.size = Pt(14)
+                p.add_run('\nGłębokość:  m')
                 p = doc.add_paragraph('')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(7.81), WD_TAB_ALIGNMENT.CENTER)
-                p.add_run('\tN').bold = True
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.add_run('N').bold = True
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
-                    doc.add_picture(out, width=docx.shared.Cm(15))
+                    p = doc.add_paragraph()
+                    p.add_run().add_picture(out, width=docx.shared.Cm(14))
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p = doc.add_paragraph()
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
-                r = p.add_run('\t1000 mm')
-                r.font.size = Pt(9)
-                p = doc.add_paragraph('\tWspółrzędne środka:\n\tX')
+                p = doc.add_paragraph('\t')
+                r = p.add_run('\N{Bullet}')
+                r.font.color.rgb = RGBColor(0xff, 0x00, 0x00)
+                r.bold = True
+                p.add_run(' - środek okręgu\n\n\tWspółrzędne środka okręgu:\n\tX')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
                 p.add_run('ŚR').font.subscript = True
                 p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('ŚR').font.subscript = True
-                p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica przekroju:\n\tD = ' + str(round(circle.r*2)) + ' mm')
+                p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
                 doc.add_page_break()
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
