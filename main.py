@@ -294,13 +294,13 @@ if __name__ == '__main__':
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                W = 595-16 # in px
+                W = 2220 # in px
                 Wc = 10000 # in chart units
                 x = lambda x: x*W/Wc+W/2
                 y = lambda x: x*W/Wc
                 img = Image.new('RGBA', (W, W), 'white')
                 imgd = ImageDraw.Draw(img)
-                circ = lambda x, y, r, a={'outline': 'red'}: imgd.ellipse((x-r, y-r, x+r, y+r), **a)
+                circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
                 circ(x(circle.a), x(-circle.b), 3, {'fill': 'red'})
                 circ(x(circle.a), x(-circle.b), y(circle.r))
                 imgd.line((0, W/2, W, W/2), fill='black')
@@ -308,7 +308,9 @@ if __name__ == '__main__':
                 imgd.line((W/2, 0, W/2, W), fill='black')
                 imgd.line((W/2-5, 15, W/2, 0, W/2+5, 15), fill='black')
                 for i in range(data1.n):
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 2, {'fill':'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 5, {'outline': 'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 4, {'outline': 'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 3, {'outline': 'black'})
                 scale = y(1000)
                 for i in range(1, 10):
                   l = 6
