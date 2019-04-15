@@ -40,7 +40,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 import io
 from docx.shared import Pt, RGBColor
 import os
-from math import sin, cos, pi
+from math import sin, cos, pi, atan2, sqrt
 
 class Data:
     def __init__(self):
@@ -302,38 +302,14 @@ if __name__ == '__main__':
                 img = Image.new('RGBA', (W, W), (255, 255, 255, 0))
                 imgd = ImageDraw.Draw(img)
                 circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-                circ(x(circle.a), x(-circle.b), 3, {'fill': 'red'})
-                circ(x(circle.a), x(-circle.b), y(circle.r))
+                cx, cy, cr = x(circle.a), x(-circle.b), y(circle.r)
+                circ(cx, cy, 3, {'fill': 'red'})
+                circ(cx, cy, cr)
                 imgd.line((0, W/2, W, W/2), fill='black')
                 imgd.line((W-15, W/2-5, W, W/2, W-15, W/2+5), fill='black')
                 imgd.line((W/2, 0, W/2, W), fill='black')
                 imgd.line((W/2-5, 15, W/2, 0, W/2+5, 15), fill='black')
                 fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
-                imgpx = img.load()
-                for i in range(data1.n):
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 5, {'outline': 'black'})
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 4, {'outline': 'black'})
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 3, {'outline': 'black'})
-                for i in range(data1.n):
-                    r = 33 # radius from point
-                    s = 24 # size of font
-                    for a in range(24):
-                        a = a/12*pi
-                        ix = int(x(data1.X[i])+r*sin(a)-s/2)
-                        iy = int(x(-data1.Y[i])+r*cos(a)-s/2)
-                        good = True
-                        for dx in range(s):
-                            for dy in range(s):
-                                good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
-                                if not good:
-                                    break
-                            if not good:
-                                break
-                        print(i+1, ix, iy, good)
-                        if not good:
-                            continue
-                        imgd.text((ix, iy), str(i+1), font=fnt, fill='black')
-                        break
                 scale = y(1000)
                 for i in range(1, 10):
                   l = 6
@@ -345,6 +321,40 @@ if __name__ == '__main__':
                 imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
                 imgd.text((16-3, W-18-16), '0', font=fnt, fill='black')
                 imgd.text((16+scale-25, W-18-16), '1000 mm', font=fnt, fill='black')
+                imgpx = img.load()
+                for i in range(data1.n):
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 5, {'outline': 'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 4, {'outline': 'black'})
+                    circ(x(data1.X[i]), x(-data1.Y[i]), 3, {'outline': 'black'})
+                for i in range(data1.n):
+                    r = 33 # radius from point
+                    ex, ey = x(data1.X[i]), x(-data1.Y[i])
+                    angle = atan2(ex-cx, ey-cr)
+                    if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
+                        angle += pi
+                    print(i, angle)
+                    for r in (22,33,44,55):
+                        s = 24 # size of font
+                        for a in range(24):
+                            a = a/12*pi + angle
+                            ix = int(x(data1.X[i])+r*sin(a)-s/2)
+                            iy = int(x(-data1.Y[i])+r*cos(a)-s/2)
+                            good = True
+                            for dx in range(s):
+                                for dy in range(s):
+                                    good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
+                                    if not good:
+                                        break
+                                if not good:
+                                    break
+                            if not good:
+                                continue
+                            imgd.text((ix, iy), str(i+1), font=fnt, fill='black')
+                            break
+                        if good:
+                           break
+                    if not good:
+                        print('ERR: no place for "',i,'"',sep='')
                 p = doc.add_paragraph('')
                 r = p.add_run('Przekrój: ')
                 r.bold = True
