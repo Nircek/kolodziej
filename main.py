@@ -42,6 +42,12 @@ from docx.shared import Pt, RGBColor
 import os
 from math import sin, cos, pi, atan2, sqrt
 
+foot = ''
+try:
+    foot = open('foot.txt').read()
+except:
+    pass
+
 class Data:
     def __init__(self):
         self.n = 0
@@ -295,7 +301,7 @@ if __name__ == '__main__':
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                W = 2220 # in px
+                W = 2048 # in px
                 Wc = 10000 # in chart units
                 M = 36
                 x = lambda x: x*W/Wc+W/2
@@ -365,28 +371,23 @@ if __name__ == '__main__':
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.RIGHT)
                 r = p.add_run('Przekrój: \t')
                 r.bold = True
-                r.font.size = Pt(14)
-                r = p.add_run()
-                r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                r.font.size = Pt(16)
+                #r = p.add_run()
+                #r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
                 r.add_picture('img/arrow.png', height=Cm(3))
-                p.add_run('\nGłębokość:  m')
+                p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
                     p = doc.add_paragraph()
                     p.add_run().add_picture(out, width=Cm(17))
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p = doc.add_paragraph()
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
-                p = doc.add_paragraph('\t')
-                r = p.add_run('\N{Bullet}')
-                r.font.color.rgb = RGBColor(0xff, 0x00, 0x00)
-                r.bold = True
-                p.add_run(' - środek okręgu\n\n\tWspółrzędne środka okręgu:\n\tX')
+                p = doc.add_paragraph('\tWspółrzędne środka okręgu:\n\tX')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
                 p.add_run('S').font.subscript = True
-                #p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
+                p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('S').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
+                doc.add_paragraph(foot)
                 doc.add_page_break()
                 for section in doc.sections:
                     section.top_margin = Cm(0.25)
