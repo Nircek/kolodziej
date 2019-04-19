@@ -366,7 +366,7 @@ if __name__ == '__main__':
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
                     p = doc.add_paragraph()
-                    p.add_run().add_picture(out, width=docx.shared.Cm(14))
+                    p.add_run().add_picture(out, width=docx.shared.Cm(17))
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p = doc.add_paragraph()
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
@@ -377,10 +377,14 @@ if __name__ == '__main__':
                 p.add_run(' - środek okręgu\n\n\tWspółrzędne środka okręgu:\n\tX')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
                 p.add_run('ŚR').font.subscript = True
-                p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
+                #p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('ŚR').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
                 doc.add_page_break()
+                for section in doc.sections:
+                    section.top_margin = Cm(0.25)
+                    section.bottom_margin = Cm(0.25)
+                    section.right_margin = Cm(0.25)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
