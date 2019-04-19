@@ -368,7 +368,7 @@ if __name__ == '__main__':
                 r.font.size = Pt(16)
                 #r = p.add_run()
                 #r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                r.add_picture('img/arrow.png', height=Cm(3))
+                r.add_picture(resource_path('./img/arrow.png'), height=Cm(3))
                 p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
