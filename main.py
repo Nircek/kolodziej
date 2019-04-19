@@ -297,19 +297,23 @@ if __name__ == '__main__':
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
                 W = 2220 # in px
                 Wc = 10000 # in chart units
+                M = 36
                 x = lambda x: x*W/Wc+W/2
                 y = lambda x: x*W/Wc
-                img = Image.new('RGBA', (W, W), (255, 255, 255, 0))
+                img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
                 imgd = ImageDraw.Draw(img)
                 circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-                cx, cy, cr = x(circle.a), x(-circle.b), y(circle.r)
+                cx, cy, cr = x(circle.a), x(-circle.b)+M, y(circle.r)
                 circ(cx, cy, 8, {'fill': 'red'})
                 circ(cx, cy, cr)
-                imgd.line((0, W/2, W, W/2), fill='black')
-                imgd.line((W-15, W/2-5, W, W/2, W-15, W/2+5), fill='black')
-                imgd.line((W/2, 0, W/2, W), fill='black')
-                imgd.line((W/2-5, 15, W/2, 0, W/2+5, 15), fill='black')
+                imgd.line((0, W/2+M, W, W/2+M), fill='black')
+                imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
+                imgd.line((W/2, M, W/2, W+M), fill='black')
+                imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
                 fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
+                fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
+                imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
+                imgd.text((W, W/2), 'X', font=fntb, fill='black')
                 scale = y(1000)
                 for i in range(1, 10):
                   l = 12
@@ -317,25 +321,25 @@ if __name__ == '__main__':
                   if i == 5:
                     l = 20
                     w = 2
-                  imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black', width=w)
-                imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
-                imgd.text((16-6, W-18-42), '0', font=fnt, fill='black')
-                imgd.text((16+scale-50, W-18-42), '1000 mm', font=fnt, fill='black')
+                  imgd.line([16+i*scale/10, W-l+M, 16+i*scale/10, W-2+M], fill='black', width=w)
+                imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
+                imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
+                imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
                 imgpx = img.load()
-                arr = [(x(data1.X[i]), x(-data1.Y[i]), str(i+1)) for i in range(data1.n)]
+                arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
                 for e in arr:
                     circ(e[0], e[1], 5, {'outline': 'black'})
                     circ(e[0], e[1], 4, {'outline': 'black'})
                     circ(e[0], e[1], 3, {'outline': 'black'})
-                arr += [(cx, cy, 'S')]
+                arr += [(cx, cy, 'S', True)]
                 for e in arr:
                     r = 33 # radius from point
                     ex, ey = e[0], e[1]
                     angle = atan2(ex-cx, ey-cr)
                     if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
                         angle += pi
-                    for r in (22,33,44,55,66):
-                        s = 30 # size of font + 6
+                    for r in (22,33,44,55,66,77,88,99):
+                        s = 54 if e[3] else 30 # size of font + 6
                         for a in range(24):
                             a = a/12*pi + angle
                             m = len(e[2])/2
@@ -351,12 +355,12 @@ if __name__ == '__main__':
                                     break
                             if not good:
                                 continue
-                            imgd.text((ix, iy), e[2], font=fnt, fill='black')
+                            imgd.text((ix, iy), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
                             break
                         if good:
                            break
                     if not good:
-                        print('ERR: no place for "',i,'"',sep='')
+                        print('ERR: no place for "',e[2],'"',sep='')
                 p = doc.add_paragraph('')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.RIGHT)
                 r = p.add_run('Przekrój: \t')
