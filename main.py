@@ -32,6 +32,15 @@ from sys import argv
 from tkinter import filedialog, messagebox
 from tkinter import *
 import traceback
+from PIL import ImageTk, Image, ImageDraw, ImageFont
+from webbrowser import open_new
+import docx
+from docx.shared import Cm
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
+import io
+from docx.shared import Pt, RGBColor
+import os
+from math import sin, cos, pi, atan2, sqrt
 
 class Data:
     def __init__(self):
@@ -224,6 +233,16 @@ def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     Old.j = inner
     return code, Old
 
+# src: https://stackoverflow.com/a/39885430
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.environ.get("_MEIPASS2",os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
 if __name__ == '__main__':
     try:
         log = ''
@@ -239,15 +258,16 @@ if __name__ == '__main__':
             t = [
                     len(str(len(files)))+1,
                     max([len(x) for x in files])+1,
-                    len(str(-1/3))+1,
-                    len(str(-1/3))+1,
-                    len(str(-1/3))+1,
-                    len(str(-1/3))+1,
+                    len(str(-0.0001/3))+1,
+                    len(str(-0.0001/3))+1,
+                    len(str(-0.0001/3))+1,
+                    len(str(-0.0001/3))+1,
                     len('Iterations')
                 ]
             log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
         else:
             t=[100]
+        doc = docx.Document()
         for i in range(len(files)):
             f = open(files[i], 'r')
             Xs = []
@@ -275,24 +295,114 @@ if __name__ == '__main__':
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                tk = Tk()
-                tk.title(files[i])
-                w = Canvas(tk, width=1000, height=1000)
-                w.configure(background='white')
-                w.pack()
-                circ = lambda x, y, r: w.create_oval(x-r, y-r, x+r, y+r, outline='red')
-                w.create_oval(circle.a/10+500, -circle.b/10+500, circle.a/10+500, -circle.b/10+500, width = 5, outline='red')
-                circ(circle.a/10+500, -circle.b/10+500, circle.r/10)
-                w.create_line(0, 500, 1000, 500, arrow=LAST)
-                w.create_line(500, 1000, 500, 0, arrow=LAST)
-                for i in range(data1.n):
-                    x = data1.X[i] / 10 + 500
-                    y = -data1.Y[i] / 10 + 500
-                    w.create_oval(x, y, x, y, width = 5)
+                W = 2048 # in px
+                Wc = 10000 # in chart units
+                M = 36
+                x = lambda x: x*W/Wc+W/2
+                y = lambda x: x*W/Wc
+                img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
+                imgd = ImageDraw.Draw(img)
+                circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
+                cx, cy, cr = x(circle.a), x(-circle.b)+M, y(circle.r)
+                circ(cx, cy, 8, {'fill': 'red'})
+                circ(cx, cy, cr)
+                imgd.line((0, W/2+M, W, W/2+M), fill='black')
+                imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
+                imgd.line((W/2, M, W/2, W+M), fill='black')
+                imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
+                fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
+                fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
+                imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
+                imgd.text((W, W/2), 'X', font=fntb, fill='black')
+                scale = y(1000)
+                for i in range(1, 10):
+                  l = 12
+                  w = 0
+                  if i == 5:
+                    l = 20
+                    w = 2
+                  imgd.line([16+i*scale/10, W-l+M, 16+i*scale/10, W-2+M], fill='black', width=w)
+                imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
+                imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
+                imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
+                imgpx = img.load()
+                arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
+                for e in arr:
+                    circ(e[0], e[1], 5, {'outline': 'black'})
+                    circ(e[0], e[1], 4, {'outline': 'black'})
+                    circ(e[0], e[1], 3, {'outline': 'black'})
+                arr += [(cx, cy, 'S', True)]
+                for e in arr:
+                    r = 33 # radius from point
+                    ex, ey = e[0], e[1]
+                    angle = atan2(ex-cx, ey-cr)
+                    if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
+                        angle += pi
+                    for r in (22,33,44,55,66,77,88,99):
+                        s = 54 if e[3] else 30 # size of font + 6
+                        for a in range(24):
+                            a = a/12*pi + angle
+                            m = len(e[2])/2
+                            ix = int(ex+r*sin(a)-m*s/2)
+                            iy = int(ey+r*cos(a)-s/2)
+                            good = True
+                            for dx in range(int(m*s)):
+                                for dy in range(s):
+                                    good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
+                                    if not good:
+                                        break
+                                if not good:
+                                    break
+                            if not good:
+                                continue
+                            imgd.text((ix, iy), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
+                            break
+                        if good:
+                           break
+                    if not good:
+                        print('ERR: no place for "',e[2],'"',sep='')
+                p = doc.add_paragraph('')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.RIGHT)
+                r = p.add_run('Przekrój: \t')
+                r.bold = True
+                r.font.size = Pt(16)
+                #r = p.add_run()
+                #r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                r.add_picture('img/arrow.png', height=Cm(3))
+                p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
+                with io.BytesIO() as out:
+                    img.save(out, format='PNG')
+                    p = doc.add_paragraph()
+                    p.add_run().add_picture(out, width=Cm(17))
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p = doc.add_paragraph('\tWspółrzędne środka okręgu:\n\tX')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
+                p.add_run('S').font.subscript = True
+                p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
+                p.add_run('S').font.subscript = True
+                p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
+                doc.add_paragraph('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski')
+                doc.add_page_break()
+                for section in doc.sections:
+                    section.top_margin = Cm(0.25)
+                    section.bottom_margin = Cm(0.25)
+                    section.right_margin = Cm(0.25)
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
-        tk.title('LOG')
+        tk.title('Kołodziej')
+        menubar = Menu(tk)
+        filemenu = Menu(menubar, tearoff=0)
+        saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
+        filemenu.add_command(label="Save as...", command=saveas)
+        filemenu.add_command(label="Exit", command=tk.destroy)
+        menubar.add_cascade(label="File", menu=filemenu)
+        helpmenu = Menu(menubar, tearoff=0)
+        helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
+        helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
+        menubar.add_cascade(label="Help", menu=helpmenu)
+        tk.config(menu=menubar)
+        tk.bind('<Control-s>', lambda x:saveas())
         w = Text(tk, width=sum(t), foreground='black')
         w.insert(INSERT, log)
         w.pack()
