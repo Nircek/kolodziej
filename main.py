@@ -303,7 +303,7 @@ if __name__ == '__main__':
                 imgd = ImageDraw.Draw(img)
                 circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
                 cx, cy, cr = x(circle.a), x(-circle.b), y(circle.r)
-                circ(cx, cy, 3, {'fill': 'red'})
+                circ(cx, cy, 8, {'fill': 'red'})
                 circ(cx, cy, cr)
                 imgd.line((0, W/2, W, W/2), fill='black')
                 imgd.line((W-15, W/2-5, W, W/2, W-15, W/2+5), fill='black')
@@ -312,35 +312,37 @@ if __name__ == '__main__':
                 fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
                 scale = y(1000)
                 for i in range(1, 10):
-                  l = 6
+                  l = 12
                   w = 0
                   if i == 5:
-                    l = 10
+                    l = 20
                     w = 2
                   imgd.line([16+i*scale/10, W-l, 16+i*scale/10, W-2], fill='black', width=w)
                 imgd.line([16, W-18, 16, W-2, 16+scale, W-2, 16+scale, W-18], fill='black')
-                imgd.text((16-3, W-18-16), '0', font=fnt, fill='black')
-                imgd.text((16+scale-25, W-18-16), '1000 mm', font=fnt, fill='black')
+                imgd.text((16-6, W-18-42), '0', font=fnt, fill='black')
+                imgd.text((16+scale-50, W-18-42), '1000 mm', font=fnt, fill='black')
                 imgpx = img.load()
-                for i in range(data1.n):
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 5, {'outline': 'black'})
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 4, {'outline': 'black'})
-                    circ(x(data1.X[i]), x(-data1.Y[i]), 3, {'outline': 'black'})
-                for i in range(data1.n):
+                arr = [(x(data1.X[i]), x(-data1.Y[i]), str(i+1)) for i in range(data1.n)]
+                for e in arr:
+                    circ(e[0], e[1], 5, {'outline': 'black'})
+                    circ(e[0], e[1], 4, {'outline': 'black'})
+                    circ(e[0], e[1], 3, {'outline': 'black'})
+                arr += [(cx, cy, 'S')]
+                for e in arr:
                     r = 33 # radius from point
-                    ex, ey = x(data1.X[i]), x(-data1.Y[i])
+                    ex, ey = e[0], e[1]
                     angle = atan2(ex-cx, ey-cr)
                     if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
                         angle += pi
-                    print(i, angle)
-                    for r in (22,33,44,55):
-                        s = 24 # size of font
+                    for r in (22,33,44,55,66):
+                        s = 30 # size of font + 6
                         for a in range(24):
                             a = a/12*pi + angle
-                            ix = int(x(data1.X[i])+r*sin(a)-s/2)
-                            iy = int(x(-data1.Y[i])+r*cos(a)-s/2)
+                            m = len(e[2])/2
+                            ix = int(ex+r*sin(a)-m*s/2)
+                            iy = int(ey+r*cos(a)-s/2)
                             good = True
-                            for dx in range(s):
+                            for dx in range(int(m*s)):
                                 for dy in range(s):
                                     good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
                                     if not good:
@@ -349,24 +351,25 @@ if __name__ == '__main__':
                                     break
                             if not good:
                                 continue
-                            imgd.text((ix, iy), str(i+1), font=fnt, fill='black')
+                            imgd.text((ix, iy), e[2], font=fnt, fill='black')
                             break
                         if good:
                            break
                     if not good:
                         print('ERR: no place for "',i,'"',sep='')
                 p = doc.add_paragraph('')
-                r = p.add_run('Przekrój: ')
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.RIGHT)
+                r = p.add_run('Przekrój: \t')
                 r.bold = True
                 r.font.size = Pt(14)
+                r = p.add_run()
+                r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+                r.add_picture('img/arrow.png', height=Cm(3))
                 p.add_run('\nGłębokość:  m')
-                p = doc.add_paragraph('')
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p.add_run('N').bold = True
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
                     p = doc.add_paragraph()
-                    p.add_run().add_picture(out, width=docx.shared.Cm(17))
+                    p.add_run().add_picture(out, width=Cm(17))
                     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p = doc.add_paragraph()
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(1.5), WD_TAB_ALIGNMENT.CENTER)
@@ -376,9 +379,9 @@ if __name__ == '__main__':
                 r.bold = True
                 p.add_run(' - środek okręgu\n\n\tWspółrzędne środka okręgu:\n\tX')
                 p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
-                p.add_run('ŚR').font.subscript = True
+                p.add_run('S').font.subscript = True
                 #p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
-                p.add_run('ŚR').font.subscript = True
+                p.add_run('S').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
                 doc.add_page_break()
                 for section in doc.sections:
