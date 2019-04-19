@@ -42,12 +42,6 @@ from docx.shared import Pt, RGBColor
 import os
 from math import sin, cos, pi, atan2, sqrt
 
-foot = ''
-try:
-    foot = open('foot.txt').read()
-except:
-    pass
-
 class Data:
     def __init__(self):
         self.n = 0
@@ -387,7 +381,7 @@ if __name__ == '__main__':
                 p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('S').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
-                doc.add_paragraph(foot)
+                doc.add_paragraph('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski')
                 doc.add_page_break()
                 for section in doc.sections:
                     section.top_margin = Cm(0.25)
