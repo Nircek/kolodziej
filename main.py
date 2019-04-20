@@ -362,7 +362,7 @@ if __name__ == '__main__':
                     if not good:
                         print('ERR: no place for "',e[2],'"',sep='')
                 p = doc.add_paragraph('')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(14), WD_TAB_ALIGNMENT.RIGHT)
+                p.paragraph_format.tab_stops.add_tab_stop(Cm(9.5), WD_TAB_ALIGNMENT.RIGHT)
                 r = p.add_run('Przekrój: \t')
                 r.bold = True
                 r.font.size = Pt(16)
@@ -381,7 +381,7 @@ if __name__ == '__main__':
                 p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
                 p.add_run('S').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
-                doc.add_paragraph('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski')
+                doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
                 doc.add_page_break()
                 for section in doc.sections:
                     section.top_margin = Cm(0.25)
