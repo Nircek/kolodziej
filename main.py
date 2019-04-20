@@ -392,8 +392,8 @@ if __name__ == '__main__':
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
                 doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
                 for section in doc.sections:
-                    section.top_margin = Cm(0.25)
-                    section.bottom_margin = Cm(0.25)
+                    section.top_margin = Cm(2)
+                    section.bottom_margin = Cm(2)
                     section.right_margin = Cm(0.25)
                 print('DONE')
             else:
