@@ -339,15 +339,15 @@ if __name__ == '__main__':
                     if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
                         angle += pi
                     for r in (22,33,44,55,66,77,88,99):
-                        s = 54 if e[3] else 30 # size of font + 6
+                        sf = 54 if e[3] else 30 # size of font + 6
                         for a in range(24):
                             a = a/12*pi + angle
                             m = len(e[2])/2
-                            ix = int(ex+r*sin(a)-m*s/2)
-                            iy = int(ey+r*cos(a)-s/2)
+                            ix = int(ex+r*sin(a)-m*sf/2)
+                            iy = int(ey+r*cos(a)-sf/2)
                             good = True
-                            for dx in range(int(m*s)):
-                                for dy in range(s):
+                            for dx in range(int(m*sf)):
+                                for dy in range(sf):
                                     good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
                                     if not good:
                                         break
