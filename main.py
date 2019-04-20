@@ -27,6 +27,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+print('Starting... ', end='', flush=True)
 from math import sqrt
 from sys import argv
 from tkinter import filedialog, messagebox
@@ -247,11 +248,14 @@ if __name__ == '__main__':
     try:
         log = ''
         files = argv[1:]
+        print('DONE')
         if len(files) == 0:
+            print('Choosing files... ', end='', flush=True)
             tk = Tk()
             tk.withdraw()
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             tk.destroy()
+            print('DONE')
         if len(files) != 0:
             s = lambda i: str(i).replace('.', ',')
             b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
@@ -270,6 +274,7 @@ if __name__ == '__main__':
         doc = docx.Document()
         first = True
         for i in range(len(files)):
+            print('[',i, '/', len(files), ']FILE: ', files[i], '\nCalculating... ', end='', flush=True)
             if not first:
                 doc.add_page_break()
             first = False
@@ -292,12 +297,14 @@ if __name__ == '__main__':
             data1 = Data(len(Xs), Xs, Ys)
             circle, circleIni = Circle(), Circle()
             code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+            print('DONE')
             log += b(i+1, t[0]) + b(files[i], t[1])
             if code == 1 or code == 2:
                 log += 'ERR: Iterations maxed out.\n'
             elif code == 3:
                 log += 'ERR: Fitting circle too big.\n'
             elif code == 0:
+                print('Making a chart... ', end='', flush=True)
                 log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
                 W = 2048 # in px
                 Wc = 10000 # in chart units
@@ -390,6 +397,7 @@ if __name__ == '__main__':
                     section.top_margin = Cm(0.25)
                     section.bottom_margin = Cm(0.25)
                     section.right_margin = Cm(0.25)
+                print('DONE')
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
