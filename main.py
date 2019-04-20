@@ -336,6 +336,8 @@ if __name__ == '__main__':
                 imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
                 imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
                 imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
+                imgd.line([W+M-32, W+M-55, W+M-32, W+M-205, W+M-2, W+M-55, W+M-2, W+M-205], fill='black', width=5)
+                imgd.line([W+M-17, W+M, W+M-17, W+M-410, W+M-32, W+M-250, W+M-2, W+M-250], fill='black', width=5)
                 imgpx = img.load()
                 arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
                 for e in arr:
@@ -373,13 +375,9 @@ if __name__ == '__main__':
                     if not good:
                         print('ERR: no place for "',e[2],'"',sep='')
                 p = doc.add_paragraph('')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(9.5), WD_TAB_ALIGNMENT.RIGHT)
-                r = p.add_run('Przekrój: \t')
+                r = p.add_run('Przekrój: ')
                 r.bold = True
                 r.font.size = Pt(16)
-                #r = p.add_run()
-                #r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                r.add_picture(resource_path('./img/arrow.png'), height=Cm(3))
                 p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
                 with io.BytesIO() as out:
                     img.save(out, format='PNG')
