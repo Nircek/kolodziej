@@ -268,7 +268,11 @@ if __name__ == '__main__':
         else:
             t=[100]
         doc = docx.Document()
+        first = True
         for i in range(len(files)):
+            if not first:
+                doc.add_page_break()
+            first = False
             f = open(files[i], 'r')
             Xs = []
             Ys = []
@@ -382,7 +386,6 @@ if __name__ == '__main__':
                 p.add_run('S').font.subscript = True
                 p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
                 doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
-                doc.add_page_break()
                 for section in doc.sections:
                     section.top_margin = Cm(0.25)
                     section.bottom_margin = Cm(0.25)
