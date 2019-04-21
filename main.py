@@ -298,7 +298,7 @@ def isBlank(imgpx, m, sf, ix, iy):
                 return False
     return True
 
-def findPlace(imgpx, e, angle, ex, ey, r):
+def findPlace(imgpx, e, angle, ex, ey):
     for r in (22,33,44,55,66,77,88,99):
         sf = 54 if e[3] else 30 # size of font + 6
         for a in range(24):
@@ -316,7 +316,7 @@ def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
         angle = atan2(ex-cx, ey-cr)
         if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
             angle += pi
-        pl = findPlace(imgpx, e, angle, ex, ey, r)
+        pl = findPlace(imgpx, e, angle, ex, ey)
         if pl is None:
             print('ERR: no place for "',e[2],'"',sep='')
         else:
