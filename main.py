@@ -268,24 +268,13 @@ def calcCircle(Xs, Ys):
     code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
     return code, circle.a, circle.b, circle.r, circle.s, circle.i, data1
 
-def genImage(data1, ca, cb, crr):
-    W = 2048 # in px
-    Wc = 10000 # in chart units
-    M = 36
-    x = lambda x: x*W/Wc+W/2
-    y = lambda x: x*W/Wc
-    img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
-    imgd = ImageDraw.Draw(img)
-    circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-    cx, cy, cr = x(ca), x(-cb)+M, y(crr)
+def makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ):
     circ(cx, cy, 8, {'fill': 'red'})
     circ(cx, cy, cr)
     imgd.line((0, W/2+M, W, W/2+M), fill='black')
     imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
     imgd.line((W/2, M, W/2, W+M), fill='black')
     imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
-    fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
-    fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
     imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
     imgd.text((W, W/2), 'X', font=fntb, fill='black')
     scale = y(1000)
@@ -295,19 +284,14 @@ def genImage(data1, ca, cb, crr):
         if ii == 5:
             l = 20
             w = 2
-        imgd.line([16+i*scale/10, W-l+M, 16+i*scale/10, W-2+M], fill='black', width=w)
+        imgd.line([16+ii*scale/10, W-l+M, 16+ii*scale/10, W-2+M], fill='black', width=w)
     imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
     imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
     imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
     imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
     imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
-    imgpx = img.load()
-    arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
-    for e in arr:
-        circ(e[0], e[1], 5, {'outline': 'black'})
-        circ(e[0], e[1], 4, {'outline': 'black'})
-        circ(e[0], e[1], 3, {'outline': 'black'})
-    arr += [(cx, cy, 'S', True)]
+
+def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
     for e in arr:
         r = 33 # radius from point
         ex, ey = e[0], e[1]
@@ -337,6 +321,27 @@ def genImage(data1, ca, cb, crr):
                 break
         if not good:
             print('ERR: no place for "',e[2],'"',sep='')
+def genImage(data1, ca, cb, crr):
+    W = 2048 # in px
+    Wc = 10000 # in chart units
+    M = 36
+    x = lambda x: x*W/Wc+W/2
+    y = lambda x: x*W/Wc
+    img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
+    imgd = ImageDraw.Draw(img)
+    fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
+    fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
+    imgpx = img.load()
+    arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
+    cx, cy, cr = x(ca), x(-cb)+M, y(crr)
+    circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
+    makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ)
+    for e in arr:
+        circ(e[0], e[1], 5, {'outline': 'black'})
+        circ(e[0], e[1], 4, {'outline': 'black'})
+        circ(e[0], e[1], 3, {'outline': 'black'})
+    arr += [(cx, cy, 'S', True)]
+    makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ)
     return img
 
 def handleFile(log, i, fn, t):
