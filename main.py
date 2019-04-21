@@ -291,6 +291,24 @@ def makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ):
     imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
     imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
 
+def isBlank(imgpx, m, sf, ix, iy):
+    for dx in range(int(m*sf)):
+        for dy in range(sf):
+            if imgpx[ix+dx, iy+dy] != (255, 255, 255, 0):
+                return False
+    return True
+
+def findPlace(imgpx, e, angle, ex, ey, r):
+    for r in (22,33,44,55,66,77,88,99):
+        sf = 54 if e[3] else 30 # size of font + 6
+        for a in range(24):
+            a = a/12*pi + angle
+            m = len(e[2])/2
+            ix = int(ex+r*sin(a)-m*sf/2)
+            iy = int(ey+r*cos(a)-sf/2)
+            if isBlank(imgpx, m, sf, ix, iy):
+                return ix, iy
+
 def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
     for e in arr:
         r = 33 # radius from point
@@ -298,29 +316,12 @@ def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
         angle = atan2(ex-cx, ey-cr)
         if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
             angle += pi
-        for r in (22,33,44,55,66,77,88,99):
-            sf = 54 if e[3] else 30 # size of font + 6
-            for a in range(24):
-                a = a/12*pi + angle
-                m = len(e[2])/2
-                ix = int(ex+r*sin(a)-m*sf/2)
-                iy = int(ey+r*cos(a)-sf/2)
-                good = True
-                for dx in range(int(m*sf)):
-                    for dy in range(sf):
-                        good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
-                        if not good:
-                            break
-                    if not good:
-                        break
-                if not good:
-                    continue
-                imgd.text((ix, iy), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
-                break
-            if good:
-                break
-        if not good:
+        pl = findPlace(imgpx, e, angle, ex, ey, r)
+        if pl is None:
             print('ERR: no place for "',e[2],'"',sep='')
+        else:
+            imgd.text((pl[0], pl[1]), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
+
 def genImage(data1, ca, cb, crr):
     W = 2048 # in px
     Wc = 10000 # in chart units
