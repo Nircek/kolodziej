@@ -274,7 +274,7 @@ if __name__ == '__main__':
         doc = docx.Document()
         first = True
         for i in range(len(files)):
-            print('[',i, '/', len(files), ']FILE: ', files[i], '\nCalculating... ', end='', flush=True)
+            print('[',i+1, '/', len(files), ']FILE: ', files[i], '\nCalculating... ', end='', flush=True)
             if not first:
                 doc.add_page_break()
             first = False
@@ -336,8 +336,8 @@ if __name__ == '__main__':
                 imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
                 imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
                 imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
-                imgd.line([W+M-32, W+M-55, W+M-32, W+M-205, W+M-2, W+M-55, W+M-2, W+M-205], fill='black', width=5)
-                imgd.line([W+M-17, W+M, W+M-17, W+M-410, W+M-32, W+M-250, W+M-2, W+M-250], fill='black', width=5)
+                imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
+                imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
                 imgpx = img.load()
                 arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
                 for e in arr:
@@ -399,7 +399,7 @@ if __name__ == '__main__':
             else:
                 log += 'Unexpected code:' + str(code) + '\n'
         tk = Tk()
-        tk.title('Kołodziej')
+        tk.title('Kołodziej v1.1')
         menubar = Menu(tk)
         filemenu = Menu(menubar, tearoff=0)
         saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
