@@ -100,9 +100,9 @@ class Data:
 
     def __repr__(self):
         s = ''
-        s += 'DATA(len:' + str(self.n) + ')['
+        s += f'DATA(len:{self.n})['
         for i in range(len(self.n)):
-            s += '(' + str(X[i]) + ',' + str(Y[i]) + '), '
+            s += f'({X[i]},{Y[i]}), '
         if self.n == 0:
             s = s[:-2]
         s += ']'
@@ -253,18 +253,17 @@ def loadFile(log, fn):
     Xs = []
     Ys = []
     for ff in f:
-        ff = ff.replace(',', '.')
-        ff = ff.split()
-        if len(ff) < 2:
-            log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
+        ffs = ff.replace(',', '.').split(maxsplit=2)
+        if len(ffs) < 2:
+            log += f'WARN: ignoring \'{ff}\'\n'
             continue
-        if len(ff) > 2:
-            log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
-        x = float(ff[0])
-        y = float(ff[1])
+        if len(ffs) > 2:
+            log += f'WARN: ignoring \'{ffs[2]}\'\n'
+        x = float(ffs[0])
+        y = float(ffs[1])
         Xs += [x]
         Ys += [y]
-    return (log, Xs, Ys)
+    return log, Xs, Ys
 
 def calcCircle(Xs, Ys):
     LambdaIni = 0.001
@@ -355,7 +354,7 @@ s = lambda i: str(i).replace('.', ',')
 b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
 
 def handleFile(log, doc, i, fn, t, n):
-    print('[',i+1, '/', n, ']FILE: ', fn, '\nCalculating... ', end='', flush=True)
+    print(f'[{i+1}/{n}]FILE: {fn}\nCalculating... ', end='', flush=True)
     if i:
         doc.add_page_break()
     log, Xs, Ys = loadFile(log, fn)
@@ -382,10 +381,10 @@ def handleFile(log, doc, i, fn, t, n):
         p = doc.add_paragraph('\tWspółrzędne środka okręgu:\n\tX')
         p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
         p.add_run('S').font.subscript = True
-        p.add_run(' = ' + str(round(ca)) + ' mm Y')
+        p.add_run(f' = {round(ca)} mm Y')
         p.add_run('S').font.subscript = True
-        p.add_run(' = ' + str(round(cb)) + ' mm')
-        doc.add_paragraph('\tŚrednica okręgu:\n\tD = ' + str(round(cr*2)) + ' mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
+        p.add_run(f' = {round(cb)} mm')
+        doc.add_paragraph(f'\tŚrednica okręgu:\n\tD = {round(cr*2)} mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
         doc.add_paragraph().add_run(f'Data pomiaru: {DATE} r.\nZespół pomiarowy: {TEAM}').font.size = Pt(7)
         for section in doc.sections:
             section.top_margin = Cm(2)
@@ -393,12 +392,12 @@ def handleFile(log, doc, i, fn, t, n):
             section.right_margin = Cm(0.25)
         print('DONE')
     else:
-        log += 'Unexpected code:' + str(code) + '\n'
+        log += f'Unexpected code: {code}\n'
     return log, doc
 
 def makeWindow(doc, log, width):
     tk = Tk()
-    tk.title('Kołodziej ' + VERSION)
+    tk.title(f'Kołodziej {VERSION}')
     menubar = Menu(tk)
     filemenu = Menu(menubar, tearoff=0)
     saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
@@ -407,7 +406,7 @@ def makeWindow(doc, log, width):
     menubar.add_cascade(label="File", menu=filemenu)
     helpmenu = Menu(menubar, tearoff=0)
     helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
-    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo('Kołodziej' + VERSION, 'Kołodziej ' + VERSION + ' by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek ' + YEAR))
+    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo(f'Kołodziej {VERSION}', f'Kołodziej {VERSION} by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek {YEAR}'))
     menubar.add_cascade(label="Help", menu=helpmenu)
     tk.config(menu=menubar)
     tk.bind('<Control-s>', lambda x:saveas())
@@ -429,11 +428,13 @@ def main():
             tk = Tk()
             tk.withdraw()
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
+            if not files:
+                files = ()
             tk.destroy()
             print('DONE')
         t = [
                 len(str(len(files)))+1,
-                max([len(x) for x in files+['Name']])+1,
+                max([len(x) for x in files+('Name',)])+1,
                 len(str(-0.0001/3))+1,
                 len(str(-0.0001/3))+1,
                 len(str(-0.0001/3))+1,
