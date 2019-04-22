@@ -426,18 +426,16 @@ def main():
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             tk.destroy()
             print('DONE')
-            t = [100]
-        else:
-            t = [
-                    len(str(len(files)))+1,
-                    max([len(x) for x in files])+1,
-                    len(str(-0.0001/3))+1,
-                    len(str(-0.0001/3))+1,
-                    len(str(-0.0001/3))+1,
-                    len(str(-0.0001/3))+1,
-                    len('Iterations')
-                ]
-            log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
+        t = [
+                len(str(len(files)))+1,
+                max([len(x) for x in files+['Name']])+1,
+                len(str(-0.0001/3))+1,
+                len(str(-0.0001/3))+1,
+                len(str(-0.0001/3))+1,
+                len(str(-0.0001/3))+1,
+                len('Iterations')
+            ]
+        log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
         first = True
         doc = docx.Document()
         for i, fn in enumerate(files):
