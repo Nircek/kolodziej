@@ -28,10 +28,9 @@
 # SOFTWARE.
 
 print('Starting... ', end='', flush=True)
-from math import sqrt
 from sys import argv
 from tkinter import filedialog, messagebox
-from tkinter import *
+from tkinter import Tk, Menu, Text, INSERT, mainloop
 import traceback
 from PIL import ImageTk, Image, ImageDraw, ImageFont
 from webbrowser import open_new
@@ -128,12 +127,12 @@ def SQR(t):
     return t*t
 
 def Sigma(data, circle):
-    sum = 0.
+    summ = 0.
     for i in range(data.n):
         dx = data.X[i] - circle.a
         dy = data.Y[i] - circle.b
-        sum += SQR(sqrt(dx*dx+dy*dy) - circle.r)
-    return sqrt(sum/data.n)
+        summ += SQR(sqrt(dx*dx+dy*dy) - circle.r)
+    return sqrt(summ/data.n)
 
 def CircleFitByLevenbergMarquardtFull(data, circleIni, LambdaIni, circle):
     '''
@@ -244,21 +243,191 @@ def resource_path(relative_path):
         base_path = os.environ.get("_MEIPASS2",os.path.abspath("."))
     return os.path.join(base_path, relative_path)
 
-if __name__ == '__main__':
+def loadFile(log, fn):
+    f = open(fn, 'r')
+    Xs = []
+    Ys = []
+    for ff in f:
+        ff = ff.replace(',', '.')
+        ff = ff.split()
+        if len(ff) < 2:
+            log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
+            continue
+        if len(ff) > 2:
+            log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
+        x = float(ff[0])
+        y = float(ff[1])
+        Xs += [x]
+        Ys += [y]
+    return (log, Xs, Ys)
+
+def calcCircle(Xs, Ys):
+    LambdaIni = 0.001
+    data1 = Data(len(Xs), Xs, Ys)
+    circle, circleIni = Circle(), Circle()
+    code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
+    return code, circle.a, circle.b, circle.r, circle.s, circle.i, data1
+
+def makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ):
+    circ(cx, cy, 8, {'fill': 'red'})
+    circ(cx, cy, cr)
+    imgd.line((0, W/2+M, W, W/2+M), fill='black')
+    imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
+    imgd.line((W/2, M, W/2, W+M), fill='black')
+    imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
+    imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
+    imgd.text((W, W/2), 'X', font=fntb, fill='black')
+    scale = y(1000)
+    for ii in range(1, 10):
+        l = 12
+        w = 0
+        if ii == 5:
+            l = 20
+            w = 2
+        imgd.line([16+ii*scale/10, W-l+M, 16+ii*scale/10, W-2+M], fill='black', width=w)
+    imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
+    imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
+    imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
+    imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
+    imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
+
+def isBlank(imgpx, m, sf, ix, iy):
+    for dx in range(int(m*sf)):
+        for dy in range(sf):
+            if imgpx[ix+dx, iy+dy] != (255, 255, 255, 0):
+                return False
+    return True
+
+def findPlace(imgpx, e, angle, ex, ey):
+    for r in (22,33,44,55,66,77,88,99):
+        sf = 54 if e[3] else 30 # size of font + 6
+        for a in range(24):
+            a = a/12*pi + angle
+            m = len(e[2])/2
+            ix = int(ex+r*sin(a)-m*sf/2)
+            iy = int(ey+r*cos(a)-sf/2)
+            if isBlank(imgpx, m, sf, ix, iy):
+                return ix, iy
+
+def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
+    for e in arr:
+        r = 33 # radius from point
+        ex, ey = e[0], e[1]
+        angle = atan2(ex-cx, ey-cr)
+        if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
+            angle += pi
+        pl = findPlace(imgpx, e, angle, ex, ey)
+        if pl is None:
+            print('ERR: no place for "',e[2],'"',sep='')
+        else:
+            imgd.text((pl[0], pl[1]), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
+
+def genImage(data1, ca, cb, crr):
+    W = 2048 # in px
+    Wc = 10000 # in chart units
+    M = 36
+    x = lambda x: x*W/Wc+W/2
+    y = lambda x: x*W/Wc
+    img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
+    imgd = ImageDraw.Draw(img)
+    fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
+    fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
+    imgpx = img.load()
+    arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
+    cx, cy, cr = x(ca), x(-cb)+M, y(crr)
+    circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
+    makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ)
+    for e in arr:
+        circ(e[0], e[1], 5, {'outline': 'black'})
+        circ(e[0], e[1], 4, {'outline': 'black'})
+        circ(e[0], e[1], 3, {'outline': 'black'})
+    arr += [(cx, cy, 'S', True)]
+    makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ)
+    return img
+
+
+s = lambda i: str(i).replace('.', ',')
+b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+
+def handleFile(log, doc, i, fn, t, n):
+    print('[',i+1, '/', n, ']FILE: ', fn, '\nCalculating... ', end='', flush=True)
+    if i:
+        doc.add_page_break()
+    log, Xs, Ys = loadFile(log, fn)
+    code, ca, cb, cr, cs, ci, data1 = calcCircle(Xs, Ys)
+    print('DONE')
+    log += b(i+1, t[0]) + b(fn, t[1])
+    if code == 1 or code == 2:
+        log += 'ERR: Iterations maxed out.\n'
+    elif code == 3:
+        log += 'ERR: Fitting circle too big.\n'
+    elif code == 0:
+        print('Making a chart... ', end='', flush=True)
+        log += b(s(ca), t[2]) + b(s(cb), t[3]) + b(s(cr), t[4]) + b(s(cs), t[5]) + str(s(ci)) + '\n'
+        img = genImage(data1, ca, cb, cr)
+        r = doc.add_paragraph().add_run('Przekrój: ')
+        r.bold = True
+        r.font.size = Pt(16)
+        doc.add_paragraph().add_run('Głębokość:  m').font.size = Pt(14)
+        with io.BytesIO() as out:
+            img.save(out, format='PNG')
+            p = doc.add_paragraph()
+            p.add_run().add_picture(out, width=Cm(17))
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p = doc.add_paragraph('\tWspółrzędne środka okręgu:\n\tX')
+        p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
+        p.add_run('S').font.subscript = True
+        p.add_run(' = ' + str(round(ca)) + ' mm Y')
+        p.add_run('S').font.subscript = True
+        p.add_run(' = ' + str(round(cb)) + ' mm')
+        doc.add_paragraph('\tŚrednica okręgu:\n\tD = ' + str(round(cr*2)) + ' mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
+        doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
+        for section in doc.sections:
+            section.top_margin = Cm(2)
+            section.bottom_margin = Cm(2)
+            section.right_margin = Cm(0.25)
+        print('DONE')
+    else:
+        log += 'Unexpected code:' + str(code) + '\n'
+    return log, doc
+
+def makeWindow(doc, log, width):
+    tk = Tk()
+    tk.title('Kołodziej v1.1')
+    menubar = Menu(tk)
+    filemenu = Menu(menubar, tearoff=0)
+    saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
+    filemenu.add_command(label="Save as...", command=saveas)
+    filemenu.add_command(label="Exit", command=tk.destroy)
+    menubar.add_cascade(label="File", menu=filemenu)
+    helpmenu = Menu(menubar, tearoff=0)
+    helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
+    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
+    menubar.add_cascade(label="Help", menu=helpmenu)
+    tk.config(menu=menubar)
+    tk.bind('<Control-s>', lambda x:saveas())
+    w = Text(tk, width=width, foreground='black')
+    w.insert(INSERT, log)
+    w.pack()
+    w.configure(state="disabled")
+    w.configure(background='white')
+    w.configure(inactiveselectbackground=w.cget("selectbackground"))
+    mainloop()
+
+def main():
     try:
         log = ''
         files = argv[1:]
         print('DONE')
-        if len(files) == 0:
+        if not files:
             print('Choosing files... ', end='', flush=True)
             tk = Tk()
             tk.withdraw()
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             tk.destroy()
             print('DONE')
-        if len(files) != 0:
-            s = lambda i: str(i).replace('.', ',')
-            b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+            t = [100]
+        else:
             t = [
                     len(str(len(files)))+1,
                     max([len(x) for x in files])+1,
@@ -269,157 +438,13 @@ if __name__ == '__main__':
                     len('Iterations')
                 ]
             log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
-        else:
-            t=[100]
-        doc = docx.Document()
         first = True
-        for i in range(len(files)):
-            print('[',i, '/', len(files), ']FILE: ', files[i], '\nCalculating... ', end='', flush=True)
-            if not first:
-                doc.add_page_break()
-            first = False
-            f = open(files[i], 'r')
-            Xs = []
-            Ys = []
-            for ff in f:
-                ff = ff.replace(',', '.')
-                ff = ff.split()
-                if len(ff) < 2:
-                    log += 'WARN: ignoring \'' + ''.join(ff) + '\'\n'
-                    continue
-                if len(ff) > 2:
-                    log += 'WARN: ignoring \'' + ''.join(ff[2:]) +  '\'\n'
-                x = float(ff[0])
-                y = float(ff[1])
-                Xs += [x]
-                Ys += [y]
-            LambdaIni = 0.001
-            data1 = Data(len(Xs), Xs, Ys)
-            circle, circleIni = Circle(), Circle()
-            code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
-            print('DONE')
-            log += b(i+1, t[0]) + b(files[i], t[1])
-            if code == 1 or code == 2:
-                log += 'ERR: Iterations maxed out.\n'
-            elif code == 3:
-                log += 'ERR: Fitting circle too big.\n'
-            elif code == 0:
-                print('Making a chart... ', end='', flush=True)
-                log += b(s(circle.a), t[2]) + b(s(circle.b), t[3]) + b(s(circle.r), t[4]) + b(s(circle.s), t[5]) + str(s(circle.i)) + '\n'
-                W = 2048 # in px
-                Wc = 10000 # in chart units
-                M = 36
-                x = lambda x: x*W/Wc+W/2
-                y = lambda x: x*W/Wc
-                img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
-                imgd = ImageDraw.Draw(img)
-                circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-                cx, cy, cr = x(circle.a), x(-circle.b)+M, y(circle.r)
-                circ(cx, cy, 8, {'fill': 'red'})
-                circ(cx, cy, cr)
-                imgd.line((0, W/2+M, W, W/2+M), fill='black')
-                imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
-                imgd.line((W/2, M, W/2, W+M), fill='black')
-                imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
-                fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
-                fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
-                imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
-                imgd.text((W, W/2), 'X', font=fntb, fill='black')
-                scale = y(1000)
-                for i in range(1, 10):
-                  l = 12
-                  w = 0
-                  if i == 5:
-                    l = 20
-                    w = 2
-                  imgd.line([16+i*scale/10, W-l+M, 16+i*scale/10, W-2+M], fill='black', width=w)
-                imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
-                imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
-                imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
-                imgpx = img.load()
-                arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
-                for e in arr:
-                    circ(e[0], e[1], 5, {'outline': 'black'})
-                    circ(e[0], e[1], 4, {'outline': 'black'})
-                    circ(e[0], e[1], 3, {'outline': 'black'})
-                arr += [(cx, cy, 'S', True)]
-                for e in arr:
-                    r = 33 # radius from point
-                    ex, ey = e[0], e[1]
-                    angle = atan2(ex-cx, ey-cr)
-                    if cr > sqrt((ex-cx)**2 + (ey-cy)**2):
-                        angle += pi
-                    for r in (22,33,44,55,66,77,88,99):
-                        sf = 54 if e[3] else 30 # size of font + 6
-                        for a in range(24):
-                            a = a/12*pi + angle
-                            m = len(e[2])/2
-                            ix = int(ex+r*sin(a)-m*sf/2)
-                            iy = int(ey+r*cos(a)-sf/2)
-                            good = True
-                            for dx in range(int(m*sf)):
-                                for dy in range(sf):
-                                    good = good and imgpx[ix+dx, iy+dy] == (255, 255, 255, 0)
-                                    if not good:
-                                        break
-                                if not good:
-                                    break
-                            if not good:
-                                continue
-                            imgd.text((ix, iy), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
-                            break
-                        if good:
-                           break
-                    if not good:
-                        print('ERR: no place for "',e[2],'"',sep='')
-                p = doc.add_paragraph('')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(9.5), WD_TAB_ALIGNMENT.RIGHT)
-                r = p.add_run('Przekrój: \t')
-                r.bold = True
-                r.font.size = Pt(16)
-                #r = p.add_run()
-                #r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                r.add_picture(resource_path('./img/arrow.png'), height=Cm(3))
-                p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
-                with io.BytesIO() as out:
-                    img.save(out, format='PNG')
-                    p = doc.add_paragraph()
-                    p.add_run().add_picture(out, width=Cm(17))
-                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                p = doc.add_paragraph('\tWspółrzędne środka okręgu:\n\tX')
-                p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
-                p.add_run('S').font.subscript = True
-                p.add_run(' = ' + str(round(circle.a)) + ' mm Y')
-                p.add_run('S').font.subscript = True
-                p.add_run(' = ' + str(round(circle.b)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(circle.r*2)) + ' mm')
-                doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
-                for section in doc.sections:
-                    section.top_margin = Cm(0.25)
-                    section.bottom_margin = Cm(0.25)
-                    section.right_margin = Cm(0.25)
-                print('DONE')
-            else:
-                log += 'Unexpected code:' + str(code) + '\n'
-        tk = Tk()
-        tk.title('Kołodziej')
-        menubar = Menu(tk)
-        filemenu = Menu(menubar, tearoff=0)
-        saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
-        filemenu.add_command(label="Save as...", command=saveas)
-        filemenu.add_command(label="Exit", command=tk.destroy)
-        menubar.add_cascade(label="File", menu=filemenu)
-        helpmenu = Menu(menubar, tearoff=0)
-        helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
-        helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
-        menubar.add_cascade(label="Help", menu=helpmenu)
-        tk.config(menu=menubar)
-        tk.bind('<Control-s>', lambda x:saveas())
-        w = Text(tk, width=sum(t), foreground='black')
-        w.insert(INSERT, log)
-        w.pack()
-        w.configure(state="disabled")
-        w.configure(background='white')
-        w.configure(inactiveselectbackground=w.cget("selectbackground"))
-        mainloop()
+        doc = docx.Document()
+        for i, fn in enumerate(files):
+            log, doc = handleFile(log, doc, i, fn, t, len(files))
+        makeWindow(doc, log, sum(t))
     except Exception as e:
         messagebox.showerror("Fatal error", traceback.format_exc())
+
+if __name__ == '__main__':
+    main()
