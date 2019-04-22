@@ -345,9 +345,12 @@ def genImage(data1, ca, cb, crr):
     makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ)
     return img
 
-def handleFile(log, i, fn, t):
-    doc = docx.Document()
-    print('[',i+1, '/', len(files), ']FILE: ', fn, '\nCalculating... ', end='', flush=True)
+
+s = lambda i: str(i).replace('.', ',')
+b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
+
+def handleFile(log, doc, i, fn, t, n):
+    print('[',i+1, '/', n, ']FILE: ', fn, '\nCalculating... ', end='', flush=True)
     if i:
         doc.add_page_break()
     log, Xs, Ys = loadFile(log, fn)
@@ -362,11 +365,10 @@ def handleFile(log, i, fn, t):
         print('Making a chart... ', end='', flush=True)
         log += b(s(ca), t[2]) + b(s(cb), t[3]) + b(s(cr), t[4]) + b(s(cs), t[5]) + str(s(ci)) + '\n'
         img = genImage(data1, ca, cb, cr)
-        p = doc.add_paragraph('')
-        r = p.add_run('Przekrój: ')
+        r = doc.add_paragraph().add_run('Przekrój: ')
         r.bold = True
         r.font.size = Pt(16)
-        p.add_run('\n\nGłębokość:  m').font.size = Pt(14)
+        doc.add_paragraph().add_run('Głębokość:  m').font.size = Pt(14)
         with io.BytesIO() as out:
             img.save(out, format='PNG')
             p = doc.add_paragraph()
@@ -377,7 +379,8 @@ def handleFile(log, i, fn, t):
         p.add_run('S').font.subscript = True
         p.add_run(' = ' + str(round(ca)) + ' mm Y')
         p.add_run('S').font.subscript = True
-        p.add_run(' = ' + str(round(cb)) + ' mm\n\n\tŚrednica okręgu:\n\tD = ' + str(round(cr*2)) + ' mm')
+        p.add_run(' = ' + str(round(cb)) + ' mm')
+        doc.add_paragraph('\tŚrednica okręgu:\n\tD = ' + str(round(cr*2)) + ' mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
         doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
         for section in doc.sections:
             section.top_margin = Cm(2)
@@ -388,7 +391,7 @@ def handleFile(log, i, fn, t):
         log += 'Unexpected code:' + str(code) + '\n'
     return log, doc
 
-def makeWindow(doc):
+def makeWindow(doc, log, width):
     tk = Tk()
     tk.title('Kołodziej v1.1')
     menubar = Menu(tk)
@@ -403,7 +406,7 @@ def makeWindow(doc):
     menubar.add_cascade(label="Help", menu=helpmenu)
     tk.config(menu=menubar)
     tk.bind('<Control-s>', lambda x:saveas())
-    w = Text(tk, width=sum(t), foreground='black')
+    w = Text(tk, width=width, foreground='black')
     w.insert(INSERT, log)
     w.pack()
     w.configure(state="disabled")
@@ -411,7 +414,7 @@ def makeWindow(doc):
     w.configure(inactiveselectbackground=w.cget("selectbackground"))
     mainloop()
 
-if __name__ == '__main__':
+def main():
     try:
         log = ''
         files = argv[1:]
@@ -425,8 +428,6 @@ if __name__ == '__main__':
             print('DONE')
             t = [100]
         else:
-            s = lambda i: str(i).replace('.', ',')
-            b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
             t = [
                     len(str(len(files)))+1,
                     max([len(x) for x in files])+1,
@@ -438,8 +439,12 @@ if __name__ == '__main__':
                 ]
             log += b('I', t[0]) + b('Name', t[1]) + b('X', t[2]) + b('Y', t[3]) + b('Radius', t[4]) + b('Sigma', t[5]) + 'Iterations' + '\n'
         first = True
+        doc = docx.Document()
         for i, fn in enumerate(files):
-            log, doc = handleFile(log, i, fn, t)
-        makeWindow(doc)
+            log, doc = handleFile(log, doc, i, fn, t, len(files))
+        makeWindow(doc, log, sum(t))
     except Exception as e:
         messagebox.showerror("Fatal error", traceback.format_exc())
+
+if __name__ == '__main__':
+    main()
