@@ -42,6 +42,11 @@ from docx.shared import Pt, RGBColor
 import os
 from math import sin, cos, pi, atan2, sqrt
 
+TEAM = 'J. Kowalski'
+VERSION = 'v1.1.1'
+DATE = '22.04.2019'
+YEAR = '2019'
+
 class Data:
     def __init__(self):
         self.n = 0
@@ -381,7 +386,7 @@ def handleFile(log, doc, i, fn, t, n):
         p.add_run('S').font.subscript = True
         p.add_run(' = ' + str(round(cb)) + ' mm')
         doc.add_paragraph('\tŚrednica okręgu:\n\tD = ' + str(round(cr*2)) + ' mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
-        doc.add_paragraph().add_run('Data pomiaru: 19.04.2019 r.\nZespół pomiarowy: J. Kowalski').font.size = Pt(7)
+        doc.add_paragraph().add_run(f'Data pomiaru: {DATE} r.\nZespół pomiarowy: {TEAM}').font.size = Pt(7)
         for section in doc.sections:
             section.top_margin = Cm(2)
             section.bottom_margin = Cm(2)
@@ -393,7 +398,7 @@ def handleFile(log, doc, i, fn, t, n):
 
 def makeWindow(doc, log, width):
     tk = Tk()
-    tk.title('Kołodziej v1.1')
+    tk.title('Kołodziej ' + VERSION)
     menubar = Menu(tk)
     filemenu = Menu(menubar, tearoff=0)
     saveas = lambda: (lambda x: doc.save(x) if x else '')((lambda: filedialog.asksaveasfilename(defaultextension='.docx', filetypes=(('docx files','*.docx'),('all files','*.*'))))())
@@ -402,7 +407,7 @@ def makeWindow(doc, log, width):
     menubar.add_cascade(label="File", menu=filemenu)
     helpmenu = Menu(menubar, tearoff=0)
     helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
-    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo("Kołodziej", "Kołodziej by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek 2019"))
+    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo('Kołodziej' + VERSION, 'Kołodziej ' + VERSION + ' by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek ' + YEAR))
     menubar.add_cascade(label="Help", menu=helpmenu)
     tk.config(menu=menubar)
     tk.bind('<Control-s>', lambda x:saveas())
