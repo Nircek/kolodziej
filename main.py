@@ -443,7 +443,7 @@ def main():
                 files = []
             print('DONE')
         files = list(files)
-        msg = 'Type the {} coord of upper left corner [-5000]:'
+        msg = 'Type the {} coord of lower left corner [-5000]:'
         X, Y = askintegerdef(msg.format('X'), -5000), askintegerdef( msg.format('Y'), -5000)
         W = askintegerdef('Type the width of the image (a litle more than the diameter of circle) [10000]:', 10000)
         tk.destroy()
