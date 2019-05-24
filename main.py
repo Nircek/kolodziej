@@ -432,9 +432,10 @@ def main():
             tk.withdraw()
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             if not files:
-                files = ()
+                files = []
             tk.destroy()
             print('DONE')
+        files = list(files)
         t = [
                 len(str(len(files)))+1,
                 max([len(x) for x in files+['Name',]])+1,
