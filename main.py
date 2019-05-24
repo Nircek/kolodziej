@@ -43,8 +43,8 @@ import os
 from math import sin, cos, pi, atan2, sqrt
 
 TEAM = 'J. Kowalski'
-VERSION = 'v1.1.1'
-DATE = '22.04.2019'
+VERSION = 'v1.1.2'
+DATE = '24.05.2019'
 YEAR = '2019'
 
 class Data:
@@ -298,7 +298,10 @@ def makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ):
 def isBlank(imgpx, m, sf, ix, iy):
     for dx in range(int(m*sf)):
         for dy in range(sf):
-            if imgpx[ix+dx, iy+dy] != (255, 255, 255, 0):
+            try:
+                if imgpx[ix+dx, iy+dy] != (255, 255, 255, 0):
+                    return False
+            except:
                 return False
     return True
 
@@ -434,7 +437,7 @@ def main():
             print('DONE')
         t = [
                 len(str(len(files)))+1,
-                max([len(x) for x in files+('Name',)])+1,
+                max([len(x) for x in files+['Name',]])+1,
                 len(str(-0.0001/3))+1,
                 len(str(-0.0001/3))+1,
                 len(str(-0.0001/3))+1,
