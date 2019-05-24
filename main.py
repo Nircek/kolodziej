@@ -31,6 +31,7 @@ print('Starting... ', end='', flush=True)
 from sys import argv
 from tkinter import filedialog, messagebox
 from tkinter import Tk, Menu, Text, INSERT, mainloop
+from tkinter.simpledialog import askstring
 import traceback
 from PIL import ImageTk, Image, ImageDraw, ImageFont
 from webbrowser import open_new
@@ -43,7 +44,7 @@ import os
 from math import sin, cos, pi, atan2, sqrt
 
 TEAM = 'J. Kowalski'
-VERSION = 'v1.1.2'
+VERSION = 'v1.2'
 DATE = '24.05.2019'
 YEAR = '2019'
 
@@ -272,16 +273,16 @@ def calcCircle(Xs, Ys):
     code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
     return code, circle.a, circle.b, circle.r, circle.s, circle.i, data1
 
-def makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ):
+def makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ):
     circ(cx, cy, 8, {'fill': 'red'})
     circ(cx, cy, cr)
-    imgd.line((0, W/2+M, W, W/2+M), fill='black')
-    imgd.line((W-15, W/2-5+M, W, W/2+M, W-15, W/2+5+M), fill='black')
-    imgd.line((W/2, M, W/2, W+M), fill='black')
-    imgd.line((W/2-5, 15+M, W/2, M, W/2+5, 15+M), fill='black')
-    imgd.text((W/2, 0), 'Y', font=fntb, fill='black')
-    imgd.text((W, W/2), 'X', font=fntb, fill='black')
-    scale = y(1000)
+    imgd.line((0, y(0)+M, W, y(0)+M), fill='black')
+    imgd.line((W-15, y(0)-5+M, W, y(0)+M, W-15, y(0)+5+M), fill='black')
+    imgd.line((x(0), M, x(0), W+M), fill='black')
+    imgd.line((x(0)-5, 15+M, x(0), M, x(0)+5, 15+M), fill='black')
+    imgd.text((x(0), 0), 'Y', font=fntb, fill='black')
+    imgd.text((W, y(0)), 'X', font=fntb, fill='black')
+    scale = r(1000)
     for ii in range(1, 10):
         l = 12
         w = 0
@@ -329,21 +330,20 @@ def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
         else:
             imgd.text((pl[0], pl[1]), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
 
-def genImage(data1, ca, cb, crr):
+def genImage(X, Y, Wc, data1, ca, cb, crr):
     W = 2048 # in px
-    Wc = 10000 # in chart units
     M = 36
-    x = lambda x: x*W/Wc+W/2
-    y = lambda x: x*W/Wc
+    x, y = lambda x: (x-X)*W/Wc, lambda y: -(y-Y-Wc)*W/Wc
+    r = lambda x: x*W/Wc
     img = Image.new('RGBA', (W+M, W+M), (255, 255, 255, 0))
     imgd = ImageDraw.Draw(img)
     fnt = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 24)
     fntb = ImageFont.truetype(resource_path('./fonts/Roboto-Regular.ttf'), 48)
     imgpx = img.load()
-    arr = [(x(data1.X[i]), x(-data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
-    cx, cy, cr = x(ca), x(-cb)+M, y(crr)
+    arr = [(x(data1.X[i]), y(data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
+    cx, cy, cr = x(ca), y(cb)+M, r(crr)
     circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-    makeCircle(cx, cy, cr, W, M, x, y, imgd, fnt, fntb, circ)
+    makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ)
     for e in arr:
         circ(e[0], e[1], 5, {'outline': 'black'})
         circ(e[0], e[1], 4, {'outline': 'black'})
@@ -356,7 +356,7 @@ def genImage(data1, ca, cb, crr):
 s = lambda i: str(i).replace('.', ',')
 b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
 
-def handleFile(log, doc, i, fn, t, n):
+def handleFile(X, Y, W, log, doc, i, fn, t, n):
     print(f'[{i+1}/{n}]FILE: {fn}\nCalculating... ', end='', flush=True)
     if i:
         doc.add_page_break()
@@ -371,7 +371,7 @@ def handleFile(log, doc, i, fn, t, n):
     elif code == 0:
         print('Making a chart... ', end='', flush=True)
         log += b(s(ca), t[2]) + b(s(cb), t[3]) + b(s(cr), t[4]) + b(s(cs), t[5]) + str(s(ci)) + '\n'
-        img = genImage(data1, ca, cb, cr)
+        img = genImage(X, Y, W, data1, ca, cb, cr)
         r = doc.add_paragraph().add_run('Przekrój: ')
         r.bold = True
         r.font.size = Pt(16)
@@ -421,21 +421,32 @@ def makeWindow(doc, log, width):
     w.configure(inactiveselectbackground=w.cget("selectbackground"))
     mainloop()
 
+def askintegerdef(msg, defa):
+    r = askstring('Enter', msg)
+    try:
+        r = int(r)
+    except:
+        r = defa
+    return r
+
 def main():
     try:
         log = ''
         files = argv[1:]
+        tk = Tk()
+        tk.withdraw()
         print('DONE')
         if not files:
             print('Choosing files... ', end='', flush=True)
-            tk = Tk()
-            tk.withdraw()
             files = filedialog.askopenfilenames(filetypes=(('txt files','*.txt'),('all files','*.*')))
             if not files:
                 files = []
-            tk.destroy()
             print('DONE')
         files = list(files)
+        msg = 'Type the {} coord of upper left corner [-5000]:'
+        X, Y = askintegerdef(msg.format('X'), -5000), askintegerdef( msg.format('Y'), -5000)
+        W = askintegerdef('Type the width of the image (a litle more than the diameter of circle) [10000]:', 10000)
+        tk.destroy()
         t = [
                 len(str(len(files)))+1,
                 max([len(x) for x in files+['Name',]])+1,
@@ -449,7 +460,7 @@ def main():
         first = True
         doc = docx.Document()
         for i, fn in enumerate(files):
-            log, doc = handleFile(log, doc, i, fn, t, len(files))
+            log, doc = handleFile(X, Y, W, log, doc, i, fn, t, len(files))
         makeWindow(doc, log, sum(t))
     except Exception as e:
         messagebox.showerror("Fatal error", traceback.format_exc())
