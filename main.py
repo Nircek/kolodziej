@@ -391,6 +391,9 @@ def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle):
             p.add_run('S').font.subscript = True
             p.add_run(f' = {round(cb)} mm')
             doc.add_paragraph(f'\tŚrednica okręgu:\n\tD = {round(cr*2)} mm').paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
+        else:
+            doc.add_paragraph('\n')
+            doc.add_paragraph('\n')
         doc.add_paragraph().add_run(f'Data pomiaru: {DATE} r.\nZespół pomiarowy: {TEAM}').font.size = Pt(7)
         for section in doc.sections:
             section.top_margin = Cm(2)
@@ -412,7 +415,7 @@ def makeWindow(doc, log, width):
     menubar.add_cascade(label="File", menu=filemenu)
     helpmenu = Menu(menubar, tearoff=0)
     helpmenu.add_command(label="Get source code", command=lambda:open_new('https://github.com/Nircek/kolodziej'))
-    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo(f'Kołodziej {VERSION}', f'Kołodziej {VERSION} by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek {YEAR}'))
+    helpmenu.add_command(label="About...", command=lambda:messagebox.showinfo(f'Kołodziej {VERSION}', f'Kołodziej {VERSION} by Nircek\nCopyright \N{COPYRIGHT SIGN} Nircek {YEAR}\nLAST EDIT {DATE}'))
     menubar.add_cascade(label="Help", menu=helpmenu)
     tk.config(menu=menubar)
     tk.bind('<Control-s>', lambda x:saveas())
