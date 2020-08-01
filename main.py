@@ -29,13 +29,13 @@
 
 print('Starting... ', end='', flush=True)
 from sys import argv
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox # Tk must be installed
 from tkinter import Tk, Menu, Text, INSERT, mainloop
 from tkinter.simpledialog import askstring
 import traceback
 from PIL import ImageTk, Image, ImageDraw, ImageFont
 from webbrowser import open_new
-import docx
+import docx # pip install python-docx
 from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 import io
@@ -44,9 +44,9 @@ import os
 from math import sin, cos, pi, atan2, sqrt
 
 TEAM = 'J. Kowalski'
-VERSION = 'v1.3'
-DATE = '08.12.2019'
-YEAR = '2019'
+VERSION = 'v1.4'
+DATE = '31.07.2020'
+YEAR = '2019-2020'
 
 class Data:
     def __init__(self):
@@ -273,7 +273,7 @@ def calcCircle(Xs, Ys):
     code, circle = CircleFitByLevenbergMarquardtFull(data1, circleIni, LambdaIni, circle)
     return code, circle.a, circle.b, circle.r, circle.s, circle.i, data1
 
-def makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ, fitcircle):
+def makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ, fitcircle, north_sign):
     if fitcircle:
         circ(cx, cy, 8, {'fill': 'red'})
         circ(cx, cy, cr)
@@ -294,8 +294,9 @@ def makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ, fitcircle
     imgd.line([16, W-18+M, 16, W-2+M, 16+scale, W-2+M, 16+scale, W-18+M], fill='black')
     imgd.text((16-6, W-18-42+M), '0', font=fnt, fill='black')
     imgd.text((16+scale-50, W-18-42+M), '1000 mm', font=fnt, fill='black')
-    imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
-    imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
+    if north_sign:
+        imgd.line([W+M-64, W+M-55, W+M-64, W+M-205, W+M-34, W+M-55, W+M-34, W+M-205], fill='black', width=3)
+        imgd.line([W+M-49, W+M, W+M-49, W+M-410, W+M-64, W+M-250, W+M-34, W+M-250], fill='black', width=3)
 
 def isBlank(imgpx, m, sf, ix, iy):
     for dx in range(int(m*sf)):
@@ -331,7 +332,7 @@ def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb, circ):
         else:
             imgd.text((pl[0], pl[1]), e[2], font=(fntb if e[3] else fnt), fill=('red' if e[3] else 'black'))
 
-def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle):
+def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle, north_sign):
     W = 2048 # in px
     M = 36
     x, y = lambda x: (x-X)*W/Wc, lambda y: -(y-Y-Wc)*W/Wc
@@ -344,7 +345,7 @@ def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle):
     arr = [(x(data1.X[i]), y(data1.Y[i])+M, str(i+1), False) for i in range(data1.n)]
     cx, cy, cr = x(ca), y(cb)+M, r(crr)
     circ = lambda x, y, r, a={'outline': 'red'}, i=None: imgd.ellipse((x-r, y-r, x+r, y+r), **a) if i is None else imgd.arc((x-r, y-r, x+r, y+r), i[0], i[1], **a)
-    makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ, fitcircle)
+    makeCircle(cx, cy, cr, W, M, X, Y, x, y, r, imgd, fnt, fntb, circ, fitcircle, north_sign)
     for e in arr:
         circ(e[0], e[1], 5, {'outline': 'black'})
         circ(e[0], e[1], 4, {'outline': 'black'})
@@ -358,7 +359,7 @@ def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle):
 s = lambda i: str(i).replace('.', ',')
 b = lambda s, l: str(s)[:l] + (l-len(str(s)))*' '
 
-def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle):
+def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle, north_sign):
     print(f'[{i+1}/{n}]FILE: {fn}\nCalculating... ', end='', flush=True)
     if i:
         doc.add_page_break()
@@ -373,7 +374,7 @@ def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle):
     elif code == 0:
         print('Making a chart... ', end='', flush=True)
         log += b(s(ca), t[2]) + b(s(cb), t[3]) + b(s(cr), t[4]) + b(s(cs), t[5]) + str(s(ci)) + '\n'
-        img = genImage(X, Y, W, data1, ca, cb, cr, fitcircle)
+        img = genImage(X, Y, W, data1, ca, cb, cr, fitcircle, north_sign)
         r = doc.add_paragraph().add_run('Przekrój: ')
         r.bold = True
         r.font.size = Pt(16)
@@ -453,6 +454,7 @@ def main():
         X, Y = askintegerdef(msg.format('X'), -5000), askintegerdef( msg.format('Y'), -5000)
         W = askintegerdef('Type the width of the image (a litle more than the diameter of circle) [10000]:', 10000)
         fitcircle = messagebox.askyesno('Fit?', 'Fit points into a circle? (default: yes)')
+        north_sign = messagebox.askyesno('North sign?', 'Draw a north sign? (default: yes)')
         tk.destroy()
         t = [
                 len(str(len(files)))+1,
@@ -467,7 +469,7 @@ def main():
         first = True
         doc = docx.Document()
         for i, fn in enumerate(files):
-            log, doc = handleFile(X, Y, W, log, doc, i, fn, t, len(files), fitcircle)
+            log, doc = handleFile(X, Y, W, log, doc, i, fn, t, len(files), fitcircle, north_sign)
         makeWindow(doc, log, sum(t))
     except Exception as e:
         messagebox.showerror("Fatal error", traceback.format_exc())
