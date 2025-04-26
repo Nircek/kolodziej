@@ -47,7 +47,7 @@ from PIL import Image, ImageDraw, ImageFont  # ImageTk
 print("Starting... ", end="", flush=True)
 # pylint: disable=C0301,C0114,C0103,C0115,C0116,R0913,R0914,R0903,R0912,R0915,W0703
 
-TEAM = "J. Kowalski"
+TEAM = "A. Reclik, A. Kawka, D. Pośpiech, M. Święty"
 VERSION = "v2.0.0"
 DATE = "26.04.2025"
 YEARS = "2019-2020, 2025"
