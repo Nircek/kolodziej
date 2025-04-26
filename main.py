@@ -48,7 +48,7 @@ print("Starting... ", end="", flush=True)
 # pylint: disable=C0301,C0114,C0103,C0115,C0116,R0913,R0914,R0903,R0912,R0915,W0703
 
 TEAM = "J. Kowalski"
-VERSION = "v2.0"
+VERSION = "v2.0.0"
 DATE = "26.04.2025"
 YEARS = "2019-2020, 2025"
 
@@ -271,8 +271,8 @@ def calcCircle(Xs, Ys):
     return code, circle.a, circle.b, circle.r, circle.s, circle.i, data1
 
 
-def makeCircle(cx, cy, cr, W, M, x, y, r, imgd, fnt, fntb, circ, fitcircle, north_sign):
-    if fitcircle:
+def makeCircle(cx, cy, cr, W, M, x, y, r, imgd, fnt, fntb, circ, fit_circle, north_sign):
+    if fit_circle:
         circ(cx, cy, 8, {"fill": "red"})
         circ(cx, cy, cr)
     imgd.line((0, y(0) + M, W, y(0) + M), fill="black")
@@ -326,7 +326,7 @@ def findPlace(imgpx, e, angle, ex, ey):
             iy = int(ey + r * cos(a) - sf / 2)
             if isBlank(imgpx, m, sf, ix, iy):
                 return ix, iy
-    raise "too little space on image"
+    return None
 
 
 def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb):  # , circ):
@@ -343,7 +343,7 @@ def makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb):  # , circ):
             imgd.text((pl[0], pl[1]), e[2], font=(fntb if e[3] else fnt), fill=("red" if e[3] else "black"))
 
 
-def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle, north_sign):
+def genImage(X, Y, Wc, data1, ca, cb, crr, fit_circle, north_sign, show_numbers):
     W = 2048  # in px
     M = 36
     x, y = lambda x: (x - X) * W / Wc, lambda y: -(y - Y - Wc) * W / Wc
@@ -363,14 +363,15 @@ def genImage(X, Y, Wc, data1, ca, cb, crr, fitcircle, north_sign):
         if i is None
         else imgd.arc((x - r, y - r, x + r, y + r), i[0], i[1], **a)
     )
-    makeCircle(cx, cy, cr, W, M, x, y, r, imgd, fnt, fntb, circ, fitcircle, north_sign)
+    makeCircle(cx, cy, cr, W, M, x, y, r, imgd, fnt, fntb, circ, fit_circle, north_sign)
     for e in arr:
         circ(e[0], e[1], 5, {"outline": "black"})
         circ(e[0], e[1], 4, {"outline": "black"})
         circ(e[0], e[1], 3, {"outline": "black"})
-    if fitcircle:
+    if fit_circle:
         arr += [(cx, cy, "S", True)]
-    makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb)
+    if show_numbers:
+        makePoints(imgd, imgpx, cx, cy, cr, arr, fnt, fntb)
     return img
 
 
@@ -382,7 +383,7 @@ def b(s, l):
     return str(s)[:l] + (l - len(str(s))) * " "
 
 
-def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle, north_sign):
+def handleFile(X, Y, W, log, doc, i, fn, t, n, fit_circle, north_sign, show_numbers):
     print(f"[{i + 1}/{n}]FILE: {fn}\nCalculating... ", end="", flush=True)
     if i:
         doc.add_page_break()
@@ -404,7 +405,7 @@ def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle, north_sign):
             + str(str_comma(ci))
             + "\n"
         )
-        img = genImage(X, Y, W, data1, ca, cb, cr, fitcircle, north_sign)
+        img = genImage(X, Y, W, data1, ca, cb, cr, fit_circle, north_sign, show_numbers)
         r = doc.add_paragraph().add_run("Przekrój: ")
         r.bold = True
         r.font.size = Pt(16)
@@ -414,7 +415,7 @@ def handleFile(X, Y, W, log, doc, i, fn, t, n, fitcircle, north_sign):
             p = doc.add_paragraph()
             p.add_run().add_picture(out, width=Cm(17))
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        if fitcircle:
+        if fit_circle:
             p = doc.add_paragraph("\tWspółrzędne środka okręgu:\n\tX")
             p.paragraph_format.tab_stops.add_tab_stop(Cm(9), WD_TAB_ALIGNMENT.LEFT)
             p.add_run("S").font.subscript = True
@@ -477,8 +478,8 @@ def makeWindow(doc, log, width):
     mainloop()
 
 
-def askintegerdef(msg, defa):
-    r = askstring("Enter", msg)
+def askintegerdef(title, msg, defa):
+    r = askstring(title, msg)
     try:
         r = int(r)
     except ValueError:
@@ -500,11 +501,16 @@ def main():
                 files = []
             print("DONE")
         files = list(files)
-        msg = "Type the {} coord of lower left corner [-5000]:"
-        X, Y = askintegerdef(msg.format("X"), -5000), askintegerdef(msg.format("Y"), -5000)
-        W = askintegerdef("Type the width of the image (a litle more than the diameter of circle) [10000]:", 10000)
-        fitcircle = messagebox.askyesno("Fit?", "Fit points into a circle? (default: yes)")
-        north_sign = messagebox.askyesno("North sign?", "Draw a north sign? (default: yes)")
+        msg = "Please enter the {} coordinate of the lower-left corner (default: -5000):"
+        X = askintegerdef("Input Required", msg.format("X"), -5000)
+        Y = askintegerdef("Input Required", msg.format("Y"), -5000)
+        msg = "Enter the width of the image (recommended: slightly larger than the circle diameter, default: 10000):"
+        W = askintegerdef("Specify Width", msg, 10000)
+        msg = "Would you like to fit the points into a circle? (default: Yes)"
+        fit_circle = messagebox.askyesno("Circle Fitting", msg)
+        north_sign = messagebox.askyesno("North Indicator", "Would you like to draw a north indicator? (default: Yes)")
+        msg = "Would you like to display point numbers on the image? (default: Yes)"
+        show_numbers = messagebox.askyesno("Point Labels", msg)
         tk.destroy()
         t = [
             len(str(len(files))) + 1,
@@ -519,7 +525,7 @@ def main():
         log += b("Radius", t[4]) + b("Sigma", t[5]) + "Iterations" + "\n"
         doc = docx.Document()
         for i, fn in enumerate(files):
-            log, doc = handleFile(X, Y, W, log, doc, i, fn, t, len(files), fitcircle, north_sign)
+            log, doc = handleFile(X, Y, W, log, doc, i, fn, t, len(files), fit_circle, north_sign, show_numbers)
         makeWindow(doc, log, sum(t))
     except Exception as _:
         print(traceback.format_exc(), file=sys.stderr)
