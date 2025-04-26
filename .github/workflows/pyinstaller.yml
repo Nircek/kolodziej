@@ -1,0 +1,28 @@
+name: Bundle executable and upload to release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  pyinstaller-build:
+    permissions: write-all
+    runs-on: windows-latest
+    steps:
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1
+        with:
+          python_ver: '3.12'
+          pyinstaller_ver: '==6.13.0'
+          spec: 'main.spec'
+          requirements: 'requirements.txt'
+      - name: Rename .exe file
+        run: move dist/kolodziej.exe dist/kolodziej-${{ github.ref_name }}.exe
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref_type == 'tag'
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: |
+            dist/kolodziej-${{ github.ref_name }}.exe
